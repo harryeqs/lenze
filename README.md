@@ -18,4 +18,4 @@ Lenze consists of the following agents:
 
 **Summary agent:** Summarise the text content extracted from each source.
 
-**Reference agent:** Keep track of the source of each piece of information summarised.
+**Reference agent:** Keep track of the source of each piece of information summarised and produce a final output.
