@@ -5,6 +5,7 @@ from typing import Any
 from xyz.node.agent import Agent
 from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
+from tools.google_search import google_search
 
 class SearchAgent(Agent):
 
@@ -16,7 +17,7 @@ class SearchAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "SearchAgent",
-                    "description": "This function can search over the internet on a topic specified by the user",
+                    "description": "This function can search across the internet on a topic provided by the user",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -31,14 +32,20 @@ class SearchAgent(Agent):
             }
         )
         self.input_type = "str"
-        self.output_type = "str"
+        self.output_type = "list"
 
-        self.llm_plan = LLMAgent(template=search_prompt, llm_client=llm_client, stream=True)
+        self.llm_search = LLMAgent(template=search_prompt, llm_client=llm_client, stream=True)
 
-    def flowing(self, question: str) -> Any:
-        return self.llm_plan(question=question)
+    def flowing(self, question: str, tools = [google_search]) -> Any:
+        return self.llm_search(question=question)
     
 
 
 search_prompt = """
+You are a search assistant who can help user to search across the internet about a specific topic.
+Ignore any sources that appear to be advertisements.
+Use the tool google_search. Whenever you use it, notify the user in your output.
+Question:
+{Question}
+Please return the urls to the first 10 relevant search results.
 """
