@@ -6,7 +6,7 @@ from xyz.utils.llm.openai_client import OpenAIClient
 from agents.search_agent import SearchAgent
 from agents.extraction_agent import ExtractionAgent
 from agents.summary_agent import SummaryAgent
-from agents.reference_agent import ReferenceAgent
+# from agents.interaction_agent import InteractionAgent
 
 
 def set_args():
@@ -25,9 +25,9 @@ if __name__ == "__main__":
     search_agent = SearchAgent(llm_client)
     extraction_agent = ExtractionAgent(llm_client)
     summary_agent = SummaryAgent(llm_client)
-    reference_agent = ReferenceAgent(llm_client)
+    # interaction_agent = InteractionAgent(llm_client)
 
-    staffs = [search_agent, extraction_agent, summary_agent, reference_agent]
+    staffs = [search_agent, extraction_agent, summary_agent]
 
     company = AutoCompany(llm_client=llm_client)
 

@@ -51,5 +51,6 @@ Use the tool google_search. Whenever you use it, notify the user by outputting "
         "content": """
 The question:
 {question}
+
 Please give me the urls to the first 10 relevant search results.
 """}]

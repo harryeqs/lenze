@@ -17,19 +17,19 @@ class ExtractionAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "ExtractionAgent",
-                    "description": "This function can search across the internet on a topic provided by the user",
+                    "description": "This function can extract text content from the provided urls.",
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "links": {"type": "list", "description": "The links to webpages where the information need to be extracted."}
                         },
-                        "required": ["question", "links"],
+                        "required": ["links"],
                     },
                 }
             }
         )
-        self.input_type = "str"
-        self.output_type = "list"
+        self.input_type = "list"
+        self.output_type = "dict"
 
         self.llm_search = LLMAgent(template=extraction_prompt, llm_client=llm_client, stream=True)
 
@@ -53,5 +53,6 @@ Example output:
         "content": """
 The links to the urls:
 {links}
+
 Please give me the extracted text from the provided links.
 """}]
