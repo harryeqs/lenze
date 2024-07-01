@@ -16,17 +16,14 @@ class ExtractionAgent(Agent):
             {
                 "type": "function",
                 "function": {
-                    "name": "SearchAgent",
+                    "name": "ExtractionAgent",
                     "description": "This function can search across the internet on a topic provided by the user",
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "question": {
-                                "type": "string",
-                                "description": "The question here which need help.",
-                            }
+                            "links": {"type": "list", "description": "The links to webpages where the information need to be extracted."}
                         },
-                        "required": ["question"],
+                        "required": ["question", "links"],
                     },
                 }
             }
@@ -36,19 +33,25 @@ class ExtractionAgent(Agent):
 
         self.llm_search = LLMAgent(template=extraction_prompt, llm_client=llm_client, stream=True)
 
-    def flowing(self, question: str, tools = [scrape_pdf, scrape_webpage]) -> Any:
-        return self.llm_search(question=question)
+    def flowing(self, question: str, links: list) -> Any:
+        return self.llm_search(links=links, tools=[scrape_pdf, scrape_webpage])
     
 
-
-extraction_prompt = """
-You are an extraction assistant that help user to extract information from a list of given urls. Extract only the informatino relevant to the question.
+extraction_prompt = [
+    {
+        "role": "system",
+        "content": """
+You are an extraction assistant that help user to extract information from a list of given urls.
 Use an appropriate to scrape the webpage based on the characteristic of the webpage.
 
-The question:
-{question}
-List of urls of sources to extract information from:
-{links}
-
 PLease give me extracted texts from all the sources in the form of a dictionary, indexed by their url.
-"""
+Example output:
+\{"url1" : "text1", "url2": "text2" \}
+"""},
+    {
+        "role": "user",
+        "content": """
+The links to the urls:
+{links}
+Please give me the extracted text from the provided links.
+"""}]

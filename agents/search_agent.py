@@ -21,10 +21,7 @@ class SearchAgent(Agent):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "question": {
-                                "type": "string",
-                                "description": "The question here which need help.",
-                            }
+                            "question": {"type": "string", "description": "The question here which need help."}
                         },
                         "required": ["question"],
                     },
@@ -36,16 +33,23 @@ class SearchAgent(Agent):
 
         self.llm_search = LLMAgent(template=search_prompt, llm_client=llm_client, stream=True)
 
-    def flowing(self, question: str, tools = [google_search]) -> Any:
-        return self.llm_search(question=question)
+    def flowing(self, question: str) -> Any:
+        return self.llm_search(question=question, tools=[google_search])
     
 
 
-search_prompt = """
+search_prompt = [
+    {
+        "role": "system",
+        "content": """
 You are a search assistant who can help user to search across the internet about a specific topic.
 Ignore any sources that appear to be advertisements.
-Use the tool google_search. Whenever you use it, notify the user in your output.
-Question:
-{Question}
-Please return the urls to the first 10 relevant search results.
-"""
+Use the tool google_search. Whenever you use it, notify the user by outputting "Searching via Google".
+"""},
+    {
+        "role": "user",
+        "content": """
+The question:
+{question}
+Please give me the urls to the first 10 relevant search results.
+"""}]

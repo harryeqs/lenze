@@ -1,10 +1,12 @@
-# *Lenze:* A search chatbot inspired by Perplexity AI.
+# 🔍 **Lenze:** A search chatbot inspired by Perplexity AI.
 
 ## Features
-Lenze is designed to complete the following task:
-- Search across the internet on a topic given by the user.
-- Return information regarding the internet.
-- Provide sources to each piece of information
+Lenze is capable of doing:
+- Search on web on user's query.
+- Retrive summarised information regarding the query.
+- Provide sources to each piece of information.
+- Suggest related questions.
+- Reference conversation history.
 
 ## Framework
 Lenze utilises the [Netmind.AI-XYZ](https://github.com/protagolabs/Netmind-AI-XYZ) framework to manipulate multiple agents.
@@ -14,8 +16,8 @@ Lenze consists of the following agents:
 
 **Search agent:** Search across the internet on the given topic and return sources.
 
-**Extraction agent:** Extract text content from the sources found.
+**Extraction agent:** Extract text content from the sources retrived.
 
-**Summary agent:** Summarise the text content extracted from each source.
+**Summary agent:** Summarise the extracted information and generate a concise response.
 
-**Reference agent:** Keep track of the source of each piece of information summarised and produce a final output.
+**Interaction agent:** Generate related questions and answer further questions, with reference to conversation history.
