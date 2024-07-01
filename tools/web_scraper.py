@@ -1,4 +1,4 @@
-from urllib import request
+from urllib.request import Request, urlopen
 from io import BytesIO
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
@@ -11,7 +11,11 @@ def scrape_webpage(url):
     Returns:
     str: The extracted text content from the webpage.
     """
-    page = request.urlopen(url).read()
+    req = Request(
+    url=url, 
+    headers={'User-Agent': 'Mozilla/5.0'}
+    )
+    page = urlopen(req).read()
     soup = BeautifulSoup(page, "html.parser")
 
     title = soup.find('title')
@@ -32,7 +36,11 @@ def scrape_pdf(url):
     Returns:
     str: The extracted text content from the PDF page.
     """
-    remote_file = request.urlopen(url).read()
+    req = Request(
+    url=url, 
+    headers={'User-Agent': 'Mozilla/5.0'}
+    )
+    remote_file = urlopen(req).read()
     memory_file = BytesIO(remote_file)
     reader = PdfReader(memory_file)
     num_of_pages = len(reader.pages)
