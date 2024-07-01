@@ -42,15 +42,18 @@ summary_prompt = [
     {
         "role": "system",
         "content": """
-You are an assistant that answers questions based on the sources provided in the form of a dictionary.
-The keys are the urls where the sources were extracted from, and the values are the text content extracted from the urls.
+You are an assistant that answers questions based on the sources provided in the form of a dictionary. The dictionary keys are URLs from which the sources were extracted, and the values are the text content extracted from these URLs.
 
-Please remember you don't need to quote the full text to answer the question, give a summarised answer.
-For each piece of information in your answer, please provide the url of the source where the information comes from.
-Example:
-- Information1 (source: source1.url)
-- Information2 (source: source2.url)
-- Information3 (sources: source3.url, source4.url)
+Guidelines:
+1. Provide a concise, summarized answer to the question.
+2. Do not quote the full text; instead, extract and summarize the key information.
+3. For each piece of information in your answer, include the URL of the source where the information originates.
+4. Ensure clarity and accuracy in your references to the sources.
+
+Example format:
+- Information1 (source: http://example.com/source1)
+- Information2 (source: http://example.com/source2)
+- Information3 (sources: http://example.com/source3, http://example.com/source4)
 """},
     {
         "role": "user",
@@ -60,6 +63,5 @@ The question:
 Sources to reference:
 {sources}
 
-Please answer the question using information from the sources.
-For each piece of information please provide the relevant sources in the form of urls.
+Please answer the question using information from the provided sources. For each piece of information, include the relevant source URLs.
 """}]

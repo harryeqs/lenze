@@ -31,20 +31,24 @@ class InteractionAgent(Agent):
         self.input_type = "str"
         self.output_type = "str"
 
-        self.llm_search = LLMAgent(template=summary_prompt, llm_client=llm_client, stream=True)
+        self.llm_search = LLMAgent(template=interaction_prompt, llm_client=llm_client, stream=True)
 
     def flowing(self, question: str, response: str) -> Any:
         return self.llm_search(question=question, response=response)
     
 
 
-summary_prompt = [
+interaction_prompt = [
     {
         "role": "system",
         "content": """
-You are an assistant to suggest three related questions based on the latest pair of question and response.
-Do not simply repeat or paraphrase the last question.
-Please use the response to get inspirations on related questions.
+You are an assistant designed to suggest three related questions based on the most recent pair of question and response. Follow these guidelines:
+
+1. Do not simply repeat or paraphrase the last question.
+2. Use the content and context of the response to inspire related and relevant questions.
+3. Ensure the new questions are diverse and cover different aspects or follow-up points related to the response.
+4. Utilize the entire chat history, accessed via internal means, to understand the context and generate meaningful, connected questions.
+5. Avoid redundancy by ensuring the new questions introduce fresh perspectives or areas of inquiry.
 """},
     {
         "role": "user",
@@ -54,5 +58,5 @@ Last question:
 Last response:
 {response}
 
-Please give me three related questions based on the last pair of question and response.
+Please provide three related questions inspired by the latest pair of question and response, utilizing the entire chat history for context.
 """}]
