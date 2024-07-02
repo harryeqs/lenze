@@ -31,10 +31,10 @@ class InteractionAgent(Agent):
         self.input_type = "str"
         self.output_type = "str"
 
-        self.llm_search = LLMAgent(template=interaction_prompt, llm_client=llm_client, stream=True)
+        self.llm_interaction = LLMAgent(template=interaction_prompt, llm_client=llm_client, stream=True)
 
     def flowing(self, question: str, response: str) -> Any:
-        return self.llm_search(question=question, response=response)
+        return self.llm_interaction(question=question, response=response)
     
 
 

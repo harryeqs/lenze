@@ -6,12 +6,14 @@ from xyz.utils.llm.openai_client import OpenAIClient
 from agents.search_agent import SearchAgent
 from agents.extraction_agent import ExtractionAgent
 from agents.summary_agent import SummaryAgent
-# from agents.interaction_agent import InteractionAgent
+from agents.interaction_agent import InteractionAgent
 
+
+query = "What is the weather in London today?"
 
 def set_args():
-    parser = argparse.ArgumentParser(description="Lenze Company")
-    parser.add_argument("--question", type=str, default="Where does banana grow?",
+    parser = argparse.ArgumentParser(description="LenzeCompany")
+    parser.add_argument("--question", type=str, default=query,
                         help="The question which need help.")
 
     return parser.parse_args()
@@ -25,7 +27,7 @@ if __name__ == "__main__":
     search_agent = SearchAgent(llm_client)
     extraction_agent = ExtractionAgent(llm_client)
     summary_agent = SummaryAgent(llm_client)
-    # interaction_agent = InteractionAgent(llm_client)
+    interaction_agent = InteractionAgent(llm_client)
 
     staffs = [search_agent, extraction_agent, summary_agent]
 

@@ -31,10 +31,11 @@ class SearchAgent(Agent):
         self.input_type = "str"
         self.output_type = "list"
 
-        self.llm_search = LLMAgent(template=search_prompt, llm_client=llm_client, stream=True)
+        # self.llm_search = LLMAgent(template=search_prompt, llm_client=llm_client, stream=True)
 
     def flowing(self, question: str) -> Any:
-        return self.llm_search(question=question, tools=[google_search])
+        urls = google_search(question)
+        return urls
     
 
 
@@ -42,14 +43,22 @@ search_prompt = [
     {
         "role": "system",
         "content": """
-You are a search assistant designed to help users find information on the internet about specific topics. When performing searches, follow these guidelines:
+You are an assistant specialized in conducting internet searches on specific topics. Follow these guidelines:
 
-1. Avoid any sources that appear to be advertisements or promotional content.
-2. Prioritize authoritative and reputable sources, such as academic articles, official websites, and well-known news outlets.
-3. Exclude sources from forums, opinion blogs, and user-generated content platforms unless explicitly requested by the user.
-4. Ensure that the information is up-to-date, preferably from the last two years unless the user specifies otherwise.
+1. **Tool Usage**:
+   - Use the `google_search` tool for searching.
+   - Notify the user: "Searching via Google using 'google_search'".
 
-Use the tool google_search. Whenever you use it, notify the user by outputting "Searching via Google".
+2. **Source Selection**:
+   - Prioritize authoritative sources: academic articles, official websites, well-known news outlets.
+   - Avoid advertisements, forums, opinion blogs, and user-generated content unless requested.
+
+3. **Recency**:
+   - Prefer sources from the last two years unless otherwise specified.
+
+4. **Output Format**:
+   - Provide URLs to the top 5 relevant search results, excluding ads.
+
 """},
     {
         "role": "user",

@@ -31,10 +31,10 @@ class SummaryAgent(Agent):
         self.input_type = "dict"
         self.output_type = "str"
 
-        self.llm_search = LLMAgent(template=summary_prompt, llm_client=llm_client, stream=True)
+        self.llm_summary = LLMAgent(template=summary_prompt, llm_client=llm_client, stream=True)
 
     def flowing(self, question: str, sources: dict) -> Any:
-        return self.llm_search(question=question, sources = sources)
+        return self.llm_summary(question=question, sources = sources)
     
 
 
@@ -42,18 +42,21 @@ summary_prompt = [
     {
         "role": "system",
         "content": """
-You are an assistant that answers questions based on the sources provided in the form of a dictionary. The dictionary keys are URLs from which the sources were extracted, and the values are the text content extracted from these URLs.
+You are an assistant that answers questions based on provided sources. Each source is a URL key with extracted text as the value.
 
 Guidelines:
-1. Provide a concise, summarized answer to the question.
-2. Do not quote the full text; instead, extract and summarize the key information.
-3. For each piece of information in your answer, include the URL of the source where the information originates.
-4. Ensure clarity and accuracy in your references to the sources.
+1. **Concise Summarization**:
+   - Provide a summarized answer to the question.
+   - Extract and summarize key information without quoting the full text.
+
+2. **Source Referencing**:
+   - Include the URL of the source for each piece of information.
+   - Ensure clarity and accuracy in referencing sources.
 
 Example format:
-- Information1 (source: http://example.com/source1)
-- Information2 (source: http://example.com/source2)
-- Information3 (sources: http://example.com/source3, http://example.com/source4)
+- Key information 1 (source: http://example.com/source1)
+- Key information 2 (source: http://example.com/source2)
+- Key information 3 (sources: http://example.com/source3, http://example.com/source4)
 """},
     {
         "role": "user",

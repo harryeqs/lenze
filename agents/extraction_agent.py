@@ -5,7 +5,7 @@ from typing import Any
 from xyz.node.agent import Agent
 from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
-from tools.web_scraper import scrape_webpage, scrape_pdf
+from tools.web_scraper import scrape_urls
 
 class ExtractionAgent(Agent):
 
@@ -21,9 +21,12 @@ class ExtractionAgent(Agent):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "links": {"type": "list", "description": "The links to webpages where the information need to be extracted."}
+                            "urls": {
+                                "type": "array",
+                                "items": {"type": "string"}, 
+                                "description": "The links to webpages where the information need to be extracted."}
                         },
-                        "required": ["links"],
+                        "required": ["urls"]
                     },
                 }
             }
@@ -31,36 +34,36 @@ class ExtractionAgent(Agent):
         self.input_type = "list"
         self.output_type = "dict"
 
-        self.llm_search = LLMAgent(template=extraction_prompt, llm_client=llm_client, stream=True)
+        # self.llm_extraction = LLMAgent(template=extraction_prompt, llm_client=llm_client, stream=True)
 
-    def flowing(self, question: str, links: list) -> Any:
-        return self.llm_search(links=links, tools=[scrape_pdf, scrape_webpage])
+    def flowing(self, urls: list):
+        extracted_text = scrape_urls(urls)
+        return extracted_text
     
 
 extraction_prompt = [
     {
         "role": "system",
         "content": """
-You are an extraction assistant designed to help users extract information from a list of given URLs. Follow these guidelines:
+You are an assistant specialized in extracting main content from web pages provided in a list of URLs. Follow these steps:
 
-1. Use the appropriate method to scrape each webpage based on its characteristics (e.g., HTML structure, content type).
-2. Ensure that only the main content is extracted, excluding advertisements, navigation menus, and other irrelevant sections.
-3. Preserve the original formatting of the text as much as possible to maintain readability.
-4. If a URL is inaccessible or results in an error, notify the user and skip that URL.
+1. **Tool Usage**:
+   - Use the `scrape_urls` tool to extract content from the provided URLs.
+   - Notify the user: "Scraping content from URLs using 'scrape_urls'".
 
-Provide the extracted texts from all the sources in the form of a dictionary, indexed by their URLs.
+2. **Content Extraction**:
+   - Extract the main text, excluding ads, navigation menus, headers, footers, and irrelevant sections.
+   - Preserve the original text formatting for readability.
 
-Example output:
-{
-    "http://example.com/url1": "Extracted text from URL 1",
-    "http://example.com/url2": "Extracted text from URL 2"
-}
+3. **Error Handling**:
+   - If a URL is inaccessible, notify: "Error: Unable to access URL".
+
+4. **Output Format**:
+   - Return the extracted texts as a JSON object, indexed by their URLs.
 """},
     {
         "role": "user",
         "content": """
-The links to the urls:
-{links}
-
-Please provide the extracted text from the provided links, adhering to the above constraints.
+Please extract the text from the URLs provided in the following list: {urls}.
+Your response should be detailed, structured, and adhere to the constraints outlined above.
 """}]

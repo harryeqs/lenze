@@ -2,8 +2,9 @@ from urllib.request import Request, urlopen
 from io import BytesIO
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
+import json
 
-def scrape_webpage(url):
+def scrape_soup(url):
     """
     Parameters:
     url (str): The URL of the HTML-based webpage to scrape.
@@ -50,3 +51,17 @@ def scrape_pdf(url):
 
     return text
 
+def scrape_urls(urls):
+    extracted_texts = {}
+    
+    for url in urls:
+        try:
+            if url.endswith('.pdf'):
+                extracted_text = scrape_pdf(url)
+            else:
+                extracted_text = scrape_soup(url)
+            extracted_texts[url] = extracted_text
+        except Exception as e:
+            print(f"Error: Unable to access URL: {url}")
+    
+    return json.dumps(extracted_texts)
