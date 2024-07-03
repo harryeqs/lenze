@@ -45,7 +45,7 @@ extraction_prompt = [
     {
         "role": "system",
         "content": """
-You are an assistant specialized in extracting main content from web pages provided in a list of URLs. Follow these steps:
+You are an assistant specialized in extracting the main content from web pages provided in a list of URLs. Follow these steps:
 
 1. **Tool Usage**:
    - Use the `scrape_urls` tool to extract content from the provided URLs.
@@ -57,9 +57,15 @@ You are an assistant specialized in extracting main content from web pages provi
 
 3. **Error Handling**:
    - If a URL is inaccessible, notify: "Error: Unable to access URL".
+   - Ignore the inaccessible URL and DO NOT attempt to extract again.
 
 4. **Output Format**:
    - Return the extracted texts as a JSON object, indexed by their URLs.
+
+5. **Important Notice**:
+   - Ensure the `scrape_urls` tool is used only once to avoid multiple extractions.
+
+Provide the extracted content as described.
 """},
     {
         "role": "user",

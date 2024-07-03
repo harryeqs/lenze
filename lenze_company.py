@@ -9,18 +9,20 @@ from agents.summary_agent import SummaryAgent
 from agents.interaction_agent import InteractionAgent
 
 
-query = "What is the weather in Margate, UK today?"
+query = "What is the weather like in Margate, England this Saturday?"
 
+"""
 def set_args():
     parser = argparse.ArgumentParser(description="LenzeCompany")
     parser.add_argument("--question", type=str, default=query,
                         help="The question which need help.")
 
     return parser.parse_args()
+"""
 
 
 if __name__ == "__main__":
-    args = set_args()
+    # args = set_args()
 
     llm_client = OpenAIClient(model="gpt-4-turbo")
 
@@ -35,4 +37,4 @@ if __name__ == "__main__":
 
     company.add_agent(staffs)
 
-    company(user_input=args.question)
+    company(user_input=query)
