@@ -9,7 +9,7 @@ from agents.summary_agent import SummaryAgent
 from agents.interaction_agent import InteractionAgent
 
 
-query = "What is the weather in London today?"
+query = "What is the weather in Margate, UK today?"
 
 def set_args():
     parser = argparse.ArgumentParser(description="LenzeCompany")

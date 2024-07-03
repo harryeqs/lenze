@@ -6,6 +6,8 @@ import json
 
 def scrape_soup(url):
     """
+    Scrapes text content from an HTML-based page.
+
     Parameters:
     url (str): The URL of the HTML-based webpage to scrape.
 
@@ -29,7 +31,7 @@ def scrape_soup(url):
 
 def scrape_pdf(url):
     """
-    Scrapes text information from a given PDF page.
+    Scrapes text content from a given PDF page.
 
     Parameters:
     url (str): The URL of the PDF page to scrape.
@@ -52,16 +54,28 @@ def scrape_pdf(url):
     return text
 
 def scrape_urls(urls):
-    extracted_texts = {}
+    sources = {}
+
+    """
+    Scrapes text contents from a list of URLs.
+
+    Parameters:
+    urls (list): The list of URLs to scrape.
+
+    Returns:
+    str: A dictionary of sources, containing URLs and corresponding extracted texts.
+    """
     
-    for url in urls:
+    for i in range(len(urls)):
+        url = urls[i]
         try:
             if url.endswith('.pdf'):
                 extracted_text = scrape_pdf(url)
             else:
                 extracted_text = scrape_soup(url)
-            extracted_texts[url] = extracted_text
+            print(extracted_text)
+            sources[f"sources-{i}"] = {"url": url, "text": extracted_text}
         except Exception as e:
             print(f"Error: Unable to access URL: {url}")
     
-    return json.dumps(extracted_texts)
+    return json.dumps(sources)

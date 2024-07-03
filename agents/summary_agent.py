@@ -42,7 +42,7 @@ summary_prompt = [
     {
         "role": "system",
         "content": """
-You are an assistant that answers questions based on provided sources. Each source is a URL key with extracted text as the value.
+You are an assistant that answers questions based on sources provided in a dictionary. Each source is a URL key with extracted text as the value.
 
 Guidelines:
 1. **Concise Summarization**:
