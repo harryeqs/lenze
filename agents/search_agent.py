@@ -4,6 +4,8 @@ from xyz.node.agent import Agent
 from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
 from tools.google_search import google_search
+from tools.web_scraper import scrape_url
+import json
 
 class SearchAgent(Agent):
 
@@ -15,11 +17,11 @@ class SearchAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "SearchAgent",
-                    "description": "This agent can search across the internet on a query provided by the user by following the searching process.",
+                    "description": "This agent can search across the internet on a query provided by the user by following the searching process and return a list of raw source data.",
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "question": {"type": "string", "description": "The query here which need help."}
+                            "query": {"type": "string", "description": "The query here which need help."}
                         },
                         "required": ["query"],
                     },
@@ -36,14 +38,30 @@ class SearchAgent(Agent):
 
         # Generate optimised query
         opt_query = self.opt_agent(query=query)
+        print(f'**Optimized query**: \n {opt_query}' +
+              f'\n --------------------')
 
         # Search using optimised query
         results = google_search(opt_query)
+        print(f'**Search results**: \n {results}' +
+              f'\n --------------------')
 
-        # Refine the results
+        # Refine the search results
         refined_results = self.refine_agent(query=query, results=results)
+        print(f'**Refined results**: {refined_results}')
+        results =json.loads(refined_results)
 
-        return refined_results
+        # scrape URLs contained in search results and returned compiled sources
+        sources = []
+        counter = 1
+
+        for result in results:
+            result['text'] = scrape_url(result['link'])
+            result.pop('snippet')
+            sources.append({f'source-{counter}': result})
+            counter += 1
+
+        return sources
     
 
 opt_prompt = [
@@ -52,12 +70,12 @@ opt_prompt = [
         "content": """
 As an intelligent search optimization agent, your task is to refine and optimize a given query to achieve the most accurate and relevant results on Google. Follow these steps to enhance the query:
 
-1. **Understand the Query:** Analyze the initial query to understand the key concepts and the user's intent. Identify the main topic, specific details, and any implicit or explicit requirements.
+1. **Understand the Query:** Analyze the initial query to understand the key concepts and the user's intent. Identify the main topic, specific details, and any implicit or explicit requirements. 
 
-2. **Refine Keywords:** Break down the query into essential keywords. Add or modify these keywords to include synonyms, related terms, and variations that capture the full scope of the user's intent.
+2. **Refine Keywords:** Break down the query into essential keywords. Add or modify these keywords to include synonyms, related terms, and variations that capture the full scope of the user's intent. Avoid using excessive quotation marks.
 
-3. **Use Operators:** Utilize Google search operators to narrow down the results. This includes:
-   - Quotation marks ("") to search for exact phrases.
+3. **Use Operators:** Utilize Google search operators to narrow down the results when necessary. This includes:
+   - Quotation marks ("") sparingly to search for exact phrases only when absolutely necessary.
    - The minus sign (-) to exclude unwanted terms.
    - The site: operator to limit results to a specific website or domain.
    - The filetype: operator to find specific types of files (e.g., PDFs, DOCs).
@@ -65,17 +83,18 @@ As an intelligent search optimization agent, your task is to refine and optimize
 
 4. **Incorporate Filters:** Consider adding filters like location, date range, or language to make the search results more relevant. For example, adding "2024" to find the most recent information or specifying "site:.edu" for educational resources.
 
-5. **Formulate the Optimized Query:** Combine the refined keywords, operators, and filters into a coherent and effective search query.
+5. **Special Case Handling:**
+   - **Date-Specific Queries:** For queries that involve a specific day of the week (e.g., "events next Monday"), automatically determine the date based on the current date and incorporate it into the search query.
+
+6. **Formulate the Optimized Query:** Combine the refined keywords, operators, and filters into a coherent and effective search query.
 
 ### Example:
-Initial Query: "best restaurants in New York"
+**Initial Query:** "events next Monday in New York"
+**Current Date:** July 4, 2024
+**Date of Next Monday:** July 8, 2024
 
-1. **Understand the Query:** The user is looking for top-rated dining options in New York City.
-2. **Refine Keywords:** Best, top-rated, restaurants, dining options, New York City, NYC.
-3. **Use Operators:** "best restaurants" "New York City" -cheap -fast food.
-4. **Incorporate Filters:** Add "2024" for the most recent results, "site:.com" for commercial sites.
-5. **Formulate the Optimized Query:** "best restaurants" "New York City" 2024 -cheap -fast food site:.com.
-6. **Test and Iterate:** Perform the search and adjust based on the results.
+### Optimized Query:**
+events July 8, 2024 in New York
 """
     },
     {
@@ -83,7 +102,9 @@ Initial Query: "best restaurants in New York"
         "content": """
 Now, apply these steps to optimize the following query:
 
-**Initial Query:** {query}
+**Original Query:** {query}
+
+Do not inclue the steps in the final output. The final output should be a single string of optimised query.
 """
     }
 ]
@@ -96,45 +117,22 @@ As a refining agent, your task is to evaluate and refine the returned search res
 
 1. **Analyze Initial Results:** Review the top results returned by the Google search. Each result is provided as a JSON object containing a link and a snippet. Pay close attention to these details.
 
-2. **Relevance Check:** Assess each result for relevance to the original query. Ensure that the content directly addresses the user's intent and query requirements. 
+2. **Relevance Check:** Assess each result for relevance to the original query. Ensure that the content directly addresses the user's intent and query requirements. Avoid discarding results that are partially relevant if they can still provide useful information.
 
 3. **Authority and Credibility:** Evaluate the credibility of the sources. Prioritize results from authoritative, trustworthy, and relevant websites (e.g., .edu, .gov, established news sites, and reputable industry-specific sites).
 
-4. **Content Quality:** Examine the quality of the content within the top results. Look for comprehensive, well-researched, and up-to-date information. Discard results that contain outdated, shallow, or irrelevant content.
+4. **Content Quality:** Examine the quality of the content within the top results. Look for comprehensive, well-researched, and up-to-date information. Retain results that are partially relevant but provide valuable information that could be useful.
 
 5. **Diversity of Perspectives:** Ensure a diversity of perspectives and information types are represented. Include results that offer different viewpoints, in-depth analyses, and various content formats (e.g., articles, videos, infographics).
 
-6. **Filtering and Exclusion:** Remove any results that do not meet the criteria for relevance, credibility, and content quality. Exclude results that are overly commercial, biased, or irrelevant.
+6. **Filtering, Exclusion, and Redundancy Removal:** 
+   - Remove any results that do not meet the criteria for relevance, credibility, and content quality.
+   - Exclude results that are overly commercial, biased, or irrelevant.
+   - Remove redundant results that provide identical or very similar information to ensure a variety of unique sources.
 
-7. **Summarize Findings:** Provide a summary of the refined search results. Include a brief description of each selected result, explaining why it was chosen and how it addresses the original query. Ensure the refined results are in the same format as the original results.
+7. **Summarize Findings:** Provide a summary of the refined search results. Ensure the refined results are in the same format as the original results.
 
-### Example:
-**Original Query:** "best restaurants in New York City 2024 -cheap -fast food site:.com"
-**Initial Results Review:**
-1. **Result 1:**
-   - **Link:** "https://example.com/top-10-restaurants-nyc-2024"
-   - **Snippet:** "Top 10 Restaurants in NYC for 2024 - The Ultimate Guide"
-   - Relevance: High
-   - Credibility: High (reputable food blog)
-   - Content Quality: High (detailed reviews, up-to-date)
-   - Diversity: Comprehensive list with different cuisines
-
-2. **Result 2:**
-   - **Link:** "https://example.com/nyc-dining-guide-2024"
-   - **Snippet:** "NYC Dining Guide 2024: Best Spots for Fine Dining"
-   - Relevance: High
-   - Credibility: Medium (general lifestyle site)
-   - Content Quality: Medium (less detailed but useful)
-   - Diversity: Focus on fine dining
-
-**Refined Results Summary:**
-1. **Link:** "https://example.com/top-10-restaurants-nyc-2024"
-   - **Snippet:** "Top 10 Restaurants in NYC for 2024 - The Ultimate Guide"
-   - **Reason:** Chosen for its detailed and comprehensive reviews of various cuisines.
-
-2. **Link:** "https://example.com/nyc-dining-guide-2024"
-   - **Snippet:** "NYC Dining Guide 2024: Best Spots for Fine Dining"
-   - **Reason:** Included for its focus on fine dining options, adding diversity to the recommendations.
+8. **Output Format:** Return the 10 most relevant results. Ensure the refined results are in the same format as the original results.
 """
     },
     {
@@ -145,6 +143,8 @@ Now, apply these steps to refine the returned search results for the following q
 **Original Query:** {query}
 
 **Original Query Results:** {results}
+
+Do not inclue the steps in the final output. The final output should be a single list of refined search results.
 """
     }
 ]

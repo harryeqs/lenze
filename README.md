@@ -14,9 +14,10 @@ Lenze utilises the [Netmind.AI-XYZ](https://github.com/protagolabs/Netmind-AI-XY
 ## Agents
 Lenze consists of the following agents:
 
-**Search agent:** Search across the internet on the given topic and return sources.
-
-**Extraction agent:** Extract text content from the sources retrived.
+**Search agent:** Search across the internet on the given query and return a list of sources containing URLs and text content at the URLs.
+<br>There are two sub-agents that this agent calls:
+- **Optimization agent:** Optimize the query for most accurate Google search results.
+- **Refining agent:** Refined the search results to exclude irrelevant, redundant and unreliable sources.
 
 **Summary agent:** Summarise the extracted information and generate a concise response.
 

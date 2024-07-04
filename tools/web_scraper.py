@@ -63,37 +63,27 @@ def scrape_pdf(url):
 
     return text
 
-def scrape_urls(urls):
-    sources = {}
+def scrape_url(url):
 
     """
     Scrapes text contents from a list of URLs.
 
     Parameters:
-    urls (list): The list of URLs to scrape.
+    url (str): The URL to scrape.
 
     Returns:
-    str: A dictionary of sources, containing URLs and corresponding extracted texts.
+    str: The extracted text content.
     """
     
-    for i in range(len(urls)):
-        url = urls[i]
-        try:
-            if url.endswith('.pdf'):
-                extracted_text = scrape_pdf(url)
-            else:
-                extracted_text = scrape_soup(url)
-            
-            if extracted_text:
-                print(extracted_text)
-                sources[f"source-{i+1}"] = {"url": url, "text": extracted_text}
-            else:
-                print(f"Failed to scrape URL after retries: {url}")
-        except Exception as e:
-            print(f"Error: Unable to access URL: {url}")
+    try:
+        if url.endswith('.pdf'):
+            extracted_text = scrape_pdf(url)
+        else:
+            extracted_text = scrape_soup(url)
+        
+        if not extracted_text:
+            print(f"Failed to scrape URL after retries: {url}")
+    except Exception as e:
+        print(f"Error: Unable to access URL: {url}")
     
-    return json.dumps(sources)
-
-
-if __name__ == "__main__":
-    scrape_urls(["https://www.accuweather.com/en/cn/shenzhen/58194/weather-forecast/58194", "https://weather.com/weather/tenday/l/7a4684e0789c881e79935986f2e9e5ab05b0104ac4310fd8818006dfb66092c3", "https://www.timeanddate.com/weather/china/shenzhen/ext"])
+    return extracted_text
