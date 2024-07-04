@@ -1,5 +1,3 @@
-import argparse
-
 from xyz.graph.auto_company import AutoCompany
 from xyz.utils.llm.openai_client import OpenAIClient
 
@@ -10,15 +8,6 @@ from agents.interaction_agent import InteractionAgent
 
 
 query = "What is the weather like in Margate, England this Saturday?"
-
-"""
-def set_args():
-    parser = argparse.ArgumentParser(description="LenzeCompany")
-    parser.add_argument("--question", type=str, default=query,
-                        help="The question which need help.")
-
-    return parser.parse_args()
-"""
 
 
 if __name__ == "__main__":
