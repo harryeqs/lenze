@@ -14,12 +14,12 @@ class SummaryAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "SummaryAgent",
-                    "description": "This function can search across the internet on a topic provided by the user",
+                    "description": "This function can analyse and produce a concise answer to an original query based on sources provided.",
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "query": {"type": "string", "description": "The original query here which need help."},
-                            "sources": {"type": "string", "description": "Sources to retrieve information from."}
+                            "query": {"type": "string", "description": "The original query input by the user at the beginning."},
+                            "sources": {"type": "string", "description": "Sources to reference."}
                         },
                         "required": ["query", "sources"],
                     },
@@ -31,7 +31,7 @@ class SummaryAgent(Agent):
 
         self.llm_summary = LLMAgent(template=summary_prompt, llm_client=llm_client, stream=False)
 
-    def flowing(self, query: str, sources: list ):
+    def flowing(self, query: str, sources: list):
         
         response = self.llm_summary(query=query, sources=sources)
 
@@ -45,6 +45,7 @@ summary_prompt = [
         "role": "system",
         "content": """
 As a summary agent, your task is to respond to the original query based on the extracted text content from the refined search results. Follow these steps to ensure a thorough and accurate response:
+**Important**: Adhere to the original query but not query generated later.
 
 1. **Understand the Query**:
    - Carefully analyze the original query to fully understand the user's intent and the specific information they are seeking.
@@ -62,7 +63,7 @@ As a summary agent, your task is to respond to the original query based on the e
    - Seamlessly integrate information from the sources, making sure to cite each source appropriately.
 
 5. **Cite Sources**:
-   - For each piece of information included in the answer, provide a citation in the format: (source: [link to the source]). Ensure the link to the source is included in the citation.
+   - For each piece of information included in the answer, provide a citation in the format: (source: [link]). Ensure the link to the source is included in the citation.
 
 6. **Format the Answer**:
    - Ensure the final answer is well-structured, clear, and easy to read.
@@ -80,7 +81,7 @@ Based on the following sources, respond to the original query comprehensively an
 **Sources:**
 {sources}
 
-The final output should address the query and provide citations for each piece of information in the format [source-1: url-1]. Please do not include the steps.
+The final output should address the query and provide citations for each piece of information in the format [source-1: www.examples.com]. Please do not include the steps.
 Ensure that the link to the source is included in the citation.
 """
     }

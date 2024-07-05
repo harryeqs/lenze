@@ -141,6 +141,8 @@ As a refining agent, your task is to evaluate and refine the returned search res
 7. **Summarize Findings:** Provide a summary of the refined search results. Ensure the refined results are in the same format as the original results.
 
 8. **Output Format:** Return the 5 most relevant results. Ensure the refined results are in the same format as the original results.
+
+**Important**: ALWAYS remind yourself of the original query.
 """
     },
     {

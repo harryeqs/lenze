@@ -6,7 +6,7 @@ from agents.summary_agent import SummaryAgent
 from agents.interaction_agent import InteractionAgent
 
 
-query = "When will apple vision pro be on sell in the UK?"
+query = "When will apple vision pro be on sale in the UK?"
 
 if __name__ == "__main__":
     # args = set_args()
