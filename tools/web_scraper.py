@@ -3,7 +3,6 @@ from urllib import error
 from io import BytesIO
 from bs4 import BeautifulSoup
 from PyPDF2 import PdfReader
-import json
 import time
 
 def scrape_soup(url, retries=3, timeout=2):

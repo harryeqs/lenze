@@ -6,8 +6,7 @@ from agents.summary_agent import SummaryAgent
 from agents.interaction_agent import InteractionAgent
 
 
-query = "What is the weather in Margate, UK today?"
-
+query = "When will apple vision pro be on sell in the UK?"
 
 if __name__ == "__main__":
     # args = set_args()
@@ -16,7 +15,7 @@ if __name__ == "__main__":
 
     search_agent = SearchAgent(llm_client)
     summary_agent = SummaryAgent(llm_client)
-    # interaction_agent = InteractionAgent(llm_client)
+    interaction_agent = InteractionAgent(llm_client)
 
     staffs = [search_agent, summary_agent]
 

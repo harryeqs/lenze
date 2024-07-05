@@ -36,10 +36,12 @@ class SearchAgent(Agent):
 
     def flowing(self, query: str):
 
+        
         # Generate optimised query
         opt_query = self.opt_agent(query=query)
         print(f'**Optimized query**: \n {opt_query}' +
               f'\n --------------------')
+        
 
         # Search using optimised query
         results = google_search(opt_query)
@@ -61,42 +63,48 @@ class SearchAgent(Agent):
             sources.append({f'source-{counter}': result})
             counter += 1
 
-        return sources
+        return json.dumps(sources)
     
 
 opt_prompt = [
     {
         "role": "system",
         "content": """
-As an intelligent search optimization agent, your task is to refine and optimize a given query to achieve the most accurate and relevant results on Google. Follow these steps to enhance the query:
+As an intelligent search optimization agent, your task is to refine and optimize a given query to achieve the most accurate and relevant results on Google. Follow these steps to enhance the query and ensure precision:
 
-1. **Understand the Query:** Analyze the initial query to understand the key concepts and the user's intent. Identify the main topic, specific details, and any implicit or explicit requirements. 
+Steps to Optimize the Query:
 
-2. **Refine Keywords:** Break down the query into essential keywords. Add or modify these keywords to include synonyms, related terms, and variations that capture the full scope of the user's intent. Avoid using excessive quotation marks.
+1. **Understand the Query:**
+   - Analyze the initial query to grasp the key concepts and the user’s intent.
+   - Identify the main topic, specific details, and any implicit or explicit requirements.
 
-3. **Use Operators:** Utilize Google search operators to narrow down the results when necessary. This includes:
-   - Quotation marks ("") sparingly to search for exact phrases only when absolutely necessary.
-   - The minus sign (-) to exclude unwanted terms.
-   - The site: operator to limit results to a specific website or domain.
-   - The filetype: operator to find specific types of files (e.g., PDFs, DOCs).
-   - The intitle: operator to ensure the main keyword is in the title of the results.
+2. **Refine Keywords:**
+   - Break down the query into essential keywords.
+   - Add or modify keywords to include synonyms, related terms, and variations that capture the full scope of the user’s intent.
+   - Avoid using excessive quotation marks.
 
-4. **Incorporate Filters:** Consider adding filters like location, date range, or language to make the search results more relevant. For example, adding "2024" to find the most recent information or specifying "site:.edu" for educational resources.
+3. **Use Operators:**
+   - Utilize Google search operators to narrow down the results when necessary:
+     - Use the minus sign (-) to exclude unwanted terms.
+     - Use the site: operator to limit results to a specific website or domain.
+     - Use the filetype: operator to find specific types of files (e.g., PDFs, DOCs).
+     - Use the intitle: operator to ensure the main keyword appears in the title of the results.
+   - *Important*: Do not use quotation marks unless absolutely necessary.
+
+4. **Incorporate Filters:**
+   - Add filters like location, date range, or language to make the search results more relevant.
+   - For example, add “2024” to find the most recent information or specify “site:.edu” for educational resources.
 
 5. **Special Case Handling:**
-   - **Date-Specific Queries:** For queries that involve a specific day of the week (e.g., "events next Monday"), automatically determine the date based on the current date and incorporate it into the search query.
+   - For date-specific queries, such as “events next Monday,” automatically determine the date based on the current date and incorporate it into the search query.
 
-6. **Formulate the Optimized Query:** Combine the refined keywords, operators, and filters into a coherent and effective search query.
+6. **Formulate the Optimized Query:**
+   - Combine the refined keywords, operators, and filters into a coherent and effective search query.
+   - Ensure the query is directly aligned with the user’s intent and avoids generating random or irrelevant results.
 
-### Example:
-**Initial Query:** "events next Monday in New York"
-**Current Date:** July 4, 2024
-**Date of Next Monday:** July 8, 2024
-
-### Optimized Query:**
-events July 8, 2024 in New York
-"""
-    },
+Goal:
+Create a search query that maximizes accuracy and relevance, aligning with the user’s intent and providing the best possible results.
+""" },
     {
         "role": "user",
         "content": """
@@ -132,7 +140,7 @@ As a refining agent, your task is to evaluate and refine the returned search res
 
 7. **Summarize Findings:** Provide a summary of the refined search results. Ensure the refined results are in the same format as the original results.
 
-8. **Output Format:** Return the 10 most relevant results. Ensure the refined results are in the same format as the original results.
+8. **Output Format:** Return the 5 most relevant results. Ensure the refined results are in the same format as the original results.
 """
     },
     {
@@ -144,7 +152,7 @@ Now, apply these steps to refine the returned search results for the following q
 
 **Original Query Results:** {results}
 
-Do not inclue the steps in the final output. The final output should be a single list of refined search results.
+Do not inclue the steps in the final output. The final output should be a single list of refined search results only. Do not include any explanation or narration.
 """
     }
 ]
