@@ -16,14 +16,14 @@ class InteractionAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "InteractionAgent",
-                    "description": "This function can suggest related questions based on recent responses.",
+                    "description": "This function can suggest new related queries based on recent queries and responses.",
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "question": {"type": "string", "description": "The question here which need help."},
+                            "query": {"type": "string", "description": "The original query."},
                             "response": {"type": "string", "description": "Latest response."}
                         },
-                        "required": ["question", "response"],
+                        "required": ["query", "response"],
                     },
                 }
             }
@@ -33,8 +33,8 @@ class InteractionAgent(Agent):
 
         self.llm_interaction = LLMAgent(template=interaction_prompt, llm_client=llm_client, stream=True)
 
-    def flowing(self, question: str, response: str) -> Any:
-        return self.llm_interaction(question=question, response=response)
+    def flowing(self, query: str, response: str) -> Any:
+        return self.llm_interaction(query=query, response=response)
     
 
 
@@ -42,21 +42,22 @@ interaction_prompt = [
     {
         "role": "system",
         "content": """
-You are an assistant designed to suggest three related questions based on the most recent pair of question and response. Follow these guidelines:
+You are an assistant designed to suggest three related queries based on the most recent pair of query and response. Follow these guidelines:
 
-1. Do not simply repeat or paraphrase the last question.
-2. Use the content and context of the response to inspire related and relevant questions.
-3. Ensure the new questions are diverse and cover different aspects or follow-up points related to the response.
-4. Utilize the entire chat history, accessed via internal means, to understand the context and generate meaningful, connected questions.
-5. Avoid redundancy by ensuring the new questions introduce fresh perspectives or areas of inquiry.
+1. Do not simply repeat or paraphrase the last query.
+2. Use the content and context of the response to inspire related and relevant queries.
+3. Ensure the new queries are diverse and cover different aspects or follow-up points related to the response.
+4. Utilize the entire chat history, accessed via internal means, to understand the context and generate meaningful, connected queries.
+5. Avoid redundancy by ensuring the new queries introduce fresh perspectives or areas of inquiry.
+6. Keep the queries moderately short.
 """},
     {
         "role": "user",
         "content": """
-Last question:
-{question}
+Last query:
+{query}
 Last response:
 {response}
 
-Please provide three related questions inspired by the latest pair of question and response, utilizing the entire chat history for context.
+Please provide three related queries inspired by the latest pair of query and response, utilizing the entire chat history for context.
 """}]

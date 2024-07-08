@@ -4,6 +4,8 @@ from xyz.node.agent import Agent
 from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
 from tools.data_store import local_read
+import concurrent
+import sys
 
 class ResponseAgent(Agent):
 
@@ -31,8 +33,15 @@ class ResponseAgent(Agent):
 
         self.llm_response = LLMAgent(template=response_prompt, llm_client=llm_client, stream=True)
 
-    def flowing(self, query: str):
-        return self.llm_response(query=query, sources=local_read())
+    def flowing(self, query: str, timeout=10):
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(self.llm_response, query=query, sources=local_read())
+            try:
+                result = future.result(timeout=timeout)
+                return result
+            except concurrent.futures.TimeoutError:
+                print("The operation timed out. Terminating the program.")
+                sys.exit(1)
 
         
 

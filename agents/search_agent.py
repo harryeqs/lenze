@@ -90,7 +90,6 @@ Steps to Optimize the Query:
 2. **Refine Keywords:**
    - Break down the query into essential keywords.
    - Add or modify keywords to include synonyms, related terms, and variations that capture the full scope of the user’s intent.
-   - Avoid using excessive quotation marks.
 
 3. **Use Operators:**
    - Utilize Google search operators to narrow down the results when necessary:
@@ -98,7 +97,7 @@ Steps to Optimize the Query:
      - Use the site: operator to limit results to a specific website or domain.
      - Use the filetype: operator to find specific types of files (e.g., PDFs, DOCs).
      - Use the intitle: operator to ensure the main keyword appears in the title of the results.
-   - *Important*: Do not use quotation marks unless absolutely necessary.
+   - *Important*: Never not use quotation marks unless absolutely necessary.
 
 4. **Incorporate Filters:**
    - Add filters like location, date range, or language to make the search results more relevant.

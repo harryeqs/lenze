@@ -6,7 +6,7 @@ from agents.response_agent import ResponseAgent
 from agents.interaction_agent import InteractionAgent
 
 
-query = "What is the weather like in Futian today?"
+query = "Vegetables currently in season"
 
 if __name__ == "__main__":
     # args = set_args()
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     response_agent = ResponseAgent(llm_client)
     interaction_agent = InteractionAgent(llm_client)
 
-    staffs = [search_agent, response_agent]
+    staffs = [search_agent, response_agent, interaction_agent]
 
     company = AutoCompany(llm_client=llm_client)
 
