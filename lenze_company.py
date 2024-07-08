@@ -6,7 +6,7 @@ from agents.response_agent import ResponseAgent
 from agents.interaction_agent import InteractionAgent
 
 
-query = "What is the weather in London today?"
+query = "What is the weather like in Futian today?"
 
 if __name__ == "__main__":
     # args = set_args()

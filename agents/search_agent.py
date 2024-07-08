@@ -23,7 +23,7 @@ class SearchAgent(Agent):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "query": {"type": "string", "description": "The query here which need help."},
+                            "query": {"type": "string", "description": "The query here which need help. It should passed to the next agent it its original form."},
                             "current_date": {"type": "string", "description": "The current date."}
                         },
                         "required": ["query", "current_date"],
@@ -40,7 +40,7 @@ class SearchAgent(Agent):
     def flowing(self, query: str, current_date = None):
 
         current_date = datetime.today()
-        yield (f'**Today is:** {current_date}' +
+        yield (f'**The current time is:** {current_date}' +
               f'\n --------------------')
         # Generate optimised query
         opt_query = self.opt_agent(query=query, current_date=current_date)

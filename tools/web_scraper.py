@@ -81,8 +81,8 @@ def scrape_url(url):
             extracted_text = scrape_soup(url)
         
         if not extracted_text:
-            print(f"Failed to scrape URL after retries: {url}")
+            print(f"\nFailed to scrape URL after retries: {url}")
     except Exception as e:
-        print(f"Error: Unable to access URL: {url}")
+        print(f"\nError: Unable to access URL: {url}")
     
     return extracted_text

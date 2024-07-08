@@ -8,7 +8,7 @@ load_dotenv()
 my_api_key = os.getenv('GOOGLE_API_KEY')
 my_cse_id = os.getenv('CSE_ID')
 
-def google_search(search_term, api_key=my_api_key, cse_id=my_cse_id, **kwargs):
+def google_search(search_term, api_key=my_api_key, cse_id=my_cse_id, attempts=3, **kwargs):
     """ 
     Conduct a Google search on a given search term.
 
@@ -20,12 +20,15 @@ def google_search(search_term, api_key=my_api_key, cse_id=my_cse_id, **kwargs):
 
     """
     service = build("customsearch", "v1", developerKey=api_key)
-    res = service.cse().list(q=search_term, cx=cse_id, **kwargs).execute()
-    if 'items' not in res:
-        print("No search results found.")
-        return json.dumps([])
+
+    for attempt in range(attempts):
+        res = service.cse().list(q=search_term, cx=cse_id, **kwargs).execute()
+        if 'items' in res:
+            full_results = res['items']
+            results = [{'link': result['link'], 'snippet': result['snippet']} for result in full_results]
+            return json.dumps(results)
+        else:
+            print(f"\nNo search results found. Attempt {attempt + 1} of {attempts}.")
     
-    full_results = res['items']
-    results = [{'link': result['link'], 'snippet': result['snippet']} for result in full_results]
-    
-    return json.dumps(results)
+    print("\nNo search results found after all attempts.")
+    return json.dumps([])
