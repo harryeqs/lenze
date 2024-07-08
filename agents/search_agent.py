@@ -5,6 +5,8 @@ from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
 from tools.google_search import google_search
 from tools.web_scraper import scrape_url
+from tools.data_store import local_store
+from datetime import datetime
 import json
 
 class SearchAgent(Agent):
@@ -21,9 +23,10 @@ class SearchAgent(Agent):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "query": {"type": "string", "description": "The query here which need help."}
+                            "query": {"type": "string", "description": "The query here which need help."},
+                            "current_date": {"type": "string", "description": "The current date."}
                         },
-                        "required": ["query"],
+                        "required": ["query", "current_date"],
                     },
                 }
             }
@@ -34,23 +37,26 @@ class SearchAgent(Agent):
         self.opt_agent = LLMAgent(template=opt_prompt, llm_client=llm_client, stream=False)
         self.refine_agent = LLMAgent(template=refine_prompt, llm_client=llm_client, stream=False)
 
-    def flowing(self, query: str):
+    def flowing(self, query: str, current_date = None):
 
-        
+        current_date = datetime.today()
+        yield (f'**Today is:** {current_date}' +
+              f'\n --------------------')
         # Generate optimised query
-        opt_query = self.opt_agent(query=query)
-        print(f'**Optimized query**: \n {opt_query}' +
+        opt_query = self.opt_agent(query=query, current_date=current_date)
+        yield (f'\n**Optimized query:** \n {opt_query}' +
               f'\n --------------------')
         
 
         # Search using optimised query
         results = google_search(opt_query)
-        print(f'**Search results**: \n {results}' +
+        yield (f'\n**Search results:** \n {results}' +
               f'\n --------------------')
 
         # Refine the search results
         refined_results = self.refine_agent(query=query, results=results)
-        print(f'**Refined results**: {refined_results}')
+        yield (f'\n**Refined results:** {refined_results}' +
+              f'\n --------------------')
         results =json.loads(refined_results)
 
         # scrape URLs contained in search results and returned compiled sources
@@ -62,9 +68,12 @@ class SearchAgent(Agent):
             result.pop('snippet')
             sources.append({f'source-{counter}': result})
             counter += 1
+        
+        local_store(sources)
 
-        return json.dumps(sources)
+        yield (f'\n**Sources stored locally, proceed to next step.**\n')
     
+
 
 opt_prompt = [
     {
@@ -96,11 +105,14 @@ Steps to Optimize the Query:
    - For example, add “2024” to find the most recent information or specify “site:.edu” for educational resources.
 
 5. **Special Case Handling:**
-   - For date-specific queries, such as “events next Monday,” automatically determine the date based on the current date and incorporate it into the search query.
+   - For date-specific queries, such as “events next Monday,” automatically determine the date based on the **current date:** {current_date} and incorporate it into the search query.
 
 6. **Formulate the Optimized Query:**
    - Combine the refined keywords, operators, and filters into a coherent and effective search query.
    - Ensure the query is directly aligned with the user’s intent and avoids generating random or irrelevant results.
+
+**Emphasis:**
+   - Check the current time and make sure the information is up to date.
 
 Goal:
 Create a search query that maximizes accuracy and relevance, aligning with the user’s intent and providing the best possible results.
@@ -138,9 +150,7 @@ As a refining agent, your task is to evaluate and refine the returned search res
    - Exclude results that are overly commercial, biased, or irrelevant.
    - Remove redundant results that provide identical or very similar information to ensure a variety of unique sources.
 
-7. **Summarize Findings:** Provide a summary of the refined search results. Ensure the refined results are in the same format as the original results.
-
-8. **Output Format:** Return the 5 most relevant results. Ensure the refined results are in the same format as the original results.
+7. **Output Format:** Return the 5 most relevant results. Ensure the refined results are in the same format as the original results.
 
 **Important**: ALWAYS remind yourself of the original query.
 """
