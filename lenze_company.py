@@ -4,20 +4,19 @@ from xyz.utils.llm.openai_client import OpenAIClient
 from agents.search_agent import SearchAgent
 from agents.response_agent import ResponseAgent
 from agents.interaction_agent import InteractionAgent
-
-
-query = "What is the weather like in London tomorrow?"
+from agents.analysis_agent import AnalysisAgent
 
 if __name__ == "__main__":
     # args = set_args()
     
     llm_client = OpenAIClient(model="gpt-4-turbo", temperature=0)
 
+    analysis_agent = AnalysisAgent(llm_client)
     search_agent = SearchAgent(llm_client)
     response_agent = ResponseAgent(llm_client)
     interaction_agent = InteractionAgent(llm_client)
 
-    staffs = [search_agent, response_agent, interaction_agent]
+    staffs = [analysis_agent, search_agent, response_agent, interaction_agent]
 
     company = AutoCompany(llm_client=llm_client)
 

@@ -75,7 +75,7 @@ def scrape_url(url):
     """
     
     try:
-        if url.endswith('.pdf'):
+        if url.endswith('.pdf') or url.endswith('.PDF'):
             extracted_text = scrape_pdf(url)
         else:
             extracted_text = scrape_soup(url)

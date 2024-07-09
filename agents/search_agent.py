@@ -97,7 +97,7 @@ Steps to Optimize the Query:
      - Use the site: operator to limit results to a specific website or domain.
      - Use the filetype: operator to find specific types of files (e.g., PDFs, DOCs).
      - Use the intitle: operator to ensure the main keyword appears in the title of the results.
-   - *Important*: DO NOT use quotation marks unless absolutely necessary.
+   - *Important*: DO NOT use quotation marks.
 
 4. **Incorporate Filters:**
    - Add filters like location, date range, or language to make the search results more relevant.
@@ -141,7 +141,7 @@ As a refining agent, your task is to evaluate and refine the returned search res
 2. **Relevance Check:** 
     - Assess each result for relevance to the original query.
     - Avoid discarding results that are partially relevant if they can still provide useful information.
-    - The information in the snippets DOES NOT have to be exact matches, for example exact day or time.
+    - **Important:** Please keep the results even if they are not exact match.
 
 3. **Authority and Credibility:** 
     - Evaluate the credibility of the sources. Prioritize results from authoritative, trustworthy, and relevant websites (e.g., .edu, .gov, established news sites, and reputable industry-specific sites).
