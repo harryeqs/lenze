@@ -14,11 +14,31 @@ Lenze utilises the [Netmind.AI-XYZ](https://github.com/protagolabs/Netmind-AI-XY
 ## Agents
 Lenze consists of the following agents:
 
-**Search agent:** Search across the internet on the given query and return a list of sources containing URLs and text content at the URLs.
+**Search Agent:** Search across the internet on the given query and return a list of sources containing URLs and text content at the URLs.
 <br>There are two sub-agents that this agent calls:
-- **Optimization agent:** Optimize the query for most accurate Google search results.
-- **Refining agent:** Refined the search results to exclude irrelevant, redundant and unreliable sources.
+- **Optimization Agent:** Optimize the query for most accurate Google search results.
+- **Refining Agent:** Refined the search results to exclude irrelevant, redundant and unreliable sources.
 
-**Response agent:** Analyze the extracted information and generate a concise response to user's query.
+**Response Agent:** Analyze the extracted information and generate a concise response to user's query.
 
-**Interaction agent:** Generate related questions and answer further questions, with reference to conversation history.
+**Interaction Agent:** Generate related questions and answer further questions, with reference to conversation history.
+
+## Workflow
+```mermaid
+graph TB;
+    A[User inputs query] --> B[Agent optimizes query];
+    B --> C[Search online using the optimized query];
+    C --> D[Agent refines search results];
+    D --> E[Scrape text from sites in search results to produce sources];
+    E --> F[Agent analyzes sources and generate response];
+    F --> G[Agent suggests relevant queries]
+```
+
+## Getting Started
+To get started, please create an ```.env``` file in the main directory of this repo.
+<br>In the ```.env``` file, please insert the OpenAI API key, Google API key and your Google Custom Search Engine ID as below:
+```
+OPENAI_API_KEY = Your-OpenAI-API-Key
+GOOGLE_API_KEY = Your-Google-API-Key
+CSE_ID = Your-Google-CSE-ID
+```
