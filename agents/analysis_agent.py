@@ -32,7 +32,7 @@ class AnalysisAgent(Agent):
         self.llm_analysis = LLMAgent(template=analysis_prompt, llm_client=llm_client, stream=False)
 
     def flowing(self, query: str):
-        yield '\nGenerating sub-quries...'
+        yield 'Generating sub-queries...'
         yield self.llm_analysis(query=query)
         
 

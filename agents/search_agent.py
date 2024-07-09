@@ -96,12 +96,12 @@ Steps to Optimize the Query:
      - Use the minus sign (-) to exclude unwanted terms.
      - Use the site: operator to limit results to a specific website or domain.
      - Use the filetype: operator to find specific types of files (e.g., PDFs, DOCs).
-     - Use the intitle: operator to ensure the main keyword appears in the title of the results.
+     - Use the intitle (only when necessary): operator to ensure the main keyword appears in the title of the results.
    - *Important*: DO NOT use quotation marks.
 
 4. **Incorporate Filters:**
    - Add filters like location, date range, or language to make the search results more relevant.
-   - For example, add “2024” to find the most recent information or specify “site:.edu” for educational resources.
+   - For example, add “2024” to find the most recent information or specify “site:.edu” or "site:.ac.*" for educational resources.
 
 5. **Special Case Handling:**
    - For date-specific queries, such as “events next Monday,” automatically determine the date based on the **current date:** {current_date} and incorporate it into the search query.

@@ -22,8 +22,8 @@ def local_store(data, file_path='data/sources.json'):
       if not isinstance(existing_data, list):
             existing_data = []
 
-      # Append new data
-      existing_data.append(data)
+      # Add on new data
+      existing_data += data
 
       # Save updated data back to the file
       with open(file_path, 'w') as file:

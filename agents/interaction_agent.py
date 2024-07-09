@@ -35,8 +35,7 @@ class InteractionAgent(Agent):
 
     def flowing(self, query: str, response: str) -> Any:
         return self.llm_interaction(query=query, response=response)
-    
-
+        
 
 interaction_prompt = [
     {
