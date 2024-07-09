@@ -92,12 +92,12 @@ Steps to Optimize the Query:
    - Add or modify keywords to include synonyms, related terms, and variations that capture the full scope of the user’s intent.
 
 3. **Use Operators:**
-   - Utilize Google search operators to narrow down the results when necessary:
+   - Utilize Google search operators to narrow down the results only when necessary:
      - Use the minus sign (-) to exclude unwanted terms.
      - Use the site: operator to limit results to a specific website or domain.
      - Use the filetype: operator to find specific types of files (e.g., PDFs, DOCs).
      - Use the intitle: operator to ensure the main keyword appears in the title of the results.
-   - *Important*: Never not use quotation marks unless absolutely necessary.
+   - *Important*: DO NOT use quotation marks unless absolutely necessary.
 
 4. **Incorporate Filters:**
    - Add filters like location, date range, or language to make the search results more relevant.
@@ -134,15 +134,26 @@ refine_prompt = [
         "content": """
 As a refining agent, your task is to evaluate and refine the returned search results from an optimized Google search query to ensure they meet the user's needs accurately and comprehensively. Follow these steps to refine the results:
 
-1. **Analyze Initial Results:** Review the top results returned by the Google search. Each result is provided as a JSON object containing a link and a snippet. Pay close attention to these details.
+1. **Analyze Initial Results:** 
+    - Review the top results returned by the Google search.
+    - Each result is provided as a JSON object containing a link and a snippet. Pay close attention to these details.
 
-2. **Relevance Check:** Assess each result for relevance to the original query. Ensure that the content directly addresses the user's intent and query requirements. Avoid discarding results that are partially relevant if they can still provide useful information.
+2. **Relevance Check:** 
+    - Assess each result for relevance to the original query.
+    - Avoid discarding results that are partially relevant if they can still provide useful information.
+    - The information in the snippets DOES NOT have to be exact matches, for example exact day or time.
 
-3. **Authority and Credibility:** Evaluate the credibility of the sources. Prioritize results from authoritative, trustworthy, and relevant websites (e.g., .edu, .gov, established news sites, and reputable industry-specific sites).
+3. **Authority and Credibility:** 
+    - Evaluate the credibility of the sources. Prioritize results from authoritative, trustworthy, and relevant websites (e.g., .edu, .gov, established news sites, and reputable industry-specific sites).
 
-4. **Content Quality:** Examine the quality of the content within the top results. Look for comprehensive, well-researched, and up-to-date information. Retain results that are partially relevant but provide valuable information that could be useful.
+4. **Content Quality:** 
+    - Examine the quality of the content within the top results. 
+    - Look for comprehensive, well-researched, and up-to-date information. 
+    - Retain results that are partially relevant but provide valuable information that could be useful.
 
-5. **Diversity of Perspectives:** Ensure a diversity of perspectives and information types are represented. Include results that offer different viewpoints, in-depth analyses, and various content formats (e.g., articles, videos, infographics).
+5. **Diversity of Perspectives:** 
+    - Ensure a diversity of perspectives and information types are represented. 
+    - Include results that offer different viewpoints, in-depth analyses, and various content formats (e.g., articles, videos, infographics).
 
 6. **Filtering, Exclusion, and Redundancy Removal:** 
    - Remove any results that do not meet the criteria for relevance, credibility, and content quality.

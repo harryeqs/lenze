@@ -73,7 +73,7 @@ Instructions for Responding to the Original Query:
 
 5. Cite Sources Appropriately:
     - Each piece of information should have a citation.
-    - Use the format (source: www.examples.com) to ensure clarity.
+    - Use strictly the format (source: www.examples.com) to ensure clarity.
 
 6. Format the Final Answer:
     - Structure the answer for readability.
@@ -83,10 +83,9 @@ Instructions for Responding to the Original Query:
 **Emphasis**:
     - Focus strictly on core information needed to answer the user's query.
     - Avoid including irrelevant or redundant information.
-    
-**Note to AI Manager**: This agent should be the last in the processing chain to ensure that the final response is accurate, comprehensive, and directly addresses the user's query.
-"""
-    },
+
+**Message to the AI Manager:** Please note that this is not the last agent in the workflow. Please call the Interaction Agent to suggest relevant queries.
+""" },
     {
         "role": "user",
         "content": """
@@ -97,7 +96,7 @@ Based on the following sources, respond to the original query comprehensively an
 **Sources:**
 {sources}
 
-The final output should address the query and provide citations for each piece of information in the format (source: www.examples.com). Please do not include the steps.
+The final output should address the query and provide citations for each piece of information strictly in the format (source: www.examples.com). Please do not include the steps.
 Ensure that the link to the source is included in the citation.
 """
     }

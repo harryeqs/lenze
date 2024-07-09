@@ -6,11 +6,11 @@ from agents.response_agent import ResponseAgent
 from agents.interaction_agent import InteractionAgent
 
 
-query = "Vegetables currently in season"
+query = "What is the weather like in London tomorrow?"
 
 if __name__ == "__main__":
     # args = set_args()
-
+    
     llm_client = OpenAIClient(model="gpt-4-turbo", temperature=0)
 
     search_agent = SearchAgent(llm_client)
@@ -23,4 +23,6 @@ if __name__ == "__main__":
 
     company.add_agent(staffs)
 
+    query = input("\n========Welcome!========\nI am Lenze and I will help you with any query by searching online.\nPlease input your query: ")
+    print("\n=======Calling the Company========")
     company(user_input=query)
