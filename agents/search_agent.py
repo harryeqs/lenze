@@ -19,7 +19,8 @@ class SearchAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "SearchAgent",
-                    "description": "This agent can search across the internet on a query provided by the user by following the searching process and return a list of raw source data.",
+                    "description": "This agent can search across the internet on a sub-query provided by the user by following the searching process and return a list of raw source data. To be called multiple times on multiple sub-queries.",
+
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -47,7 +48,6 @@ class SearchAgent(Agent):
         yield (f'\n**Optimized query:** \n {opt_query}' +
               f'\n --------------------')
         
-
         # Search using optimised query
         results = google_search(opt_query)
         yield (f'\n**Search results:** \n {results}' +
@@ -62,6 +62,7 @@ class SearchAgent(Agent):
         # scrape URLs contained in search results and returned compiled sources
         sources = []
         counter = 1
+        yield ('\n**Scraping texts from refined results.**')
 
         for result in results:
             result['text'] = scrape_url(result['link'])
@@ -121,7 +122,7 @@ Create a search query that maximizes accuracy and relevance, aligning with the u
         "content": """
 Now, apply these steps to optimize the following query:
 
-**Original Query:** {query}
+**Sub-query:** {query}
 
 Do not inclue the steps in the final output. The final output should be a single string of optimised query.
 """
@@ -162,7 +163,7 @@ As a refining agent, your task is to evaluate and refine the returned search res
 
 7. **Output Format:** Return the 5 most relevant results. Ensure the refined results are in the same format as the original results.
 
-**Important**: ALWAYS remind yourself of the original query.
+**Important**: ALWAYS remind yourself of the current sub query.
 """
     },
     {
@@ -170,9 +171,9 @@ As a refining agent, your task is to evaluate and refine the returned search res
         "content": """
 Now, apply these steps to refine the returned search results for the following query:
 
-**Original Query:** {query}
+**Sub-query:** {query}
 
-**Original Query Results:** {results}
+**Sub-query Results:** {results}
 
 Do not inclue the steps in the final output. The final output should be a single list of refined search results only. Do not include any explanation or narration.
 """

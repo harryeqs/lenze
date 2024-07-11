@@ -17,7 +17,7 @@ class ResponseAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "ResponseAgent",
-                    "description": "This function can analyse and produce a concise response to an original query based on sources provided.",
+                    "description": "This function can analyse and produce a concise response to an original query based on sources provided. Not to be called until all sub-queries have been searched by the SearchAgent.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -51,6 +51,8 @@ response_prompt = [
         "content": """
 As a response agent, your task is to respond to the original query based on the extracted text content from the refined search results. Follow these steps to ensure a concises and accurate response.
 
+**Message to the AI manager:** do not call the response agent until all the sources have been gathered by multipler calls of the search agent on each of the sub-queries.
+
 Instructions for Responding to the Original Query:
 
 1. Understand the Query:
@@ -83,14 +85,12 @@ Instructions for Responding to the Original Query:
 **Emphasis**:
     - Focus strictly on core information needed to answer the user's query.
     - Avoid including irrelevant or redundant information.
-
-**Message to the AI Manager:** Please note that this is not the last agent in the workflow. Please call the Interaction Agent to suggest relevant queries.
 """ },
     {
         "role": "user",
         "content": """
 Based on the following sources, respond to the original query comprehensively and cite each source for the information provided.
-
+Remember to use the original query not the sub-queries.
 **Original Query:** {query}
 
 **Sources:**

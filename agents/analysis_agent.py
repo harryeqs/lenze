@@ -52,16 +52,26 @@ Instructions:
 
 3. **Decompose into Sub-Queries:**
    - If the query is complex, divide it into smaller, manageable sub-queries.
+   - Do not generate any irrelevant sub-queries. For example, there is no need to understand what an event is if I only want the time when it takes place.
    - Each sub-query should focus on a specific aspect of the main query to facilitate detailed analysis.
    - **Important:** If the original query is simple enough for searching directly, DO NOT generate any sub-queries.
 
 4. **Structured Output:** Provide a structured analysis that includes:
-   - Main Query: Restate the main query for clarity.
-   - Context: Brief explanation of the context or background of the query.
-   - Key Elements: List of key components identified in the query.
-   - Sub-Queries: Detailed sub-queries derived from the main query, each addressing a specific component.
+   - A list of sub-queries.
 
-   **Message to AI Manager:** For each sub-query, calls the Search Agent to conduct a search.
+**Message to the AI Manager:**
+   - For each sub-query, pass the sub-query along to the search agent and let it do an independent search on the sub-query.
+   - After search on the current sub-query is complete, call the search agent again with the next sub-query along.
+   - DO NOT call the response agent until searches on all the sub-queries are completed.
+
+**Example workflow:**
+   1. AnalysisAgent analyzes query and generate sub-queries
+   2. SearchAgent searches over the first sub-query.
+   3. SearchAgent seaches over the next sub-query.
+   4. Repeat seaching until all sub-queries has been searched.
+   5. ResponseAgent generates response based on all of the gathered sources.
+   6. InteractionAgent suggests relevant queries.
+
 """
     },
     {

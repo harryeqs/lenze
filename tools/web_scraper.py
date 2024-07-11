@@ -48,22 +48,6 @@ def scrape_pdf(url, retries=3, timeout=3, max_content = 5000):
     Returns:
     str: The extracted text content from the PDF page.
     """
-
-    """
-    req = Request(
-    url=url, 
-    headers={'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 Chrome/91.0.4472.124 Safari/537.36'}
-    )
-    remote_file = urlopen(req).read()
-    memory_file = BytesIO(remote_file)
-    reader = PdfReader(memory_file)
-    num_of_pages = len(reader.pages)
-    text = ""
-    for page_num in range(num_of_pages):
-        text = '\n'.join([text, reader.pages[page_num].extract_text()])
-
-    return text
-    """
     while retries > 0:
         try:
             req = Request(url=url, headers={'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 Chrome/91.0.4472.124 Safari/537.36'})
@@ -92,35 +76,6 @@ def scrape_pdf(url, retries=3, timeout=3, max_content = 5000):
 
         return ""
 
-
-
-def is_pdf(url):
-    """
-    Checks if the URL points to a PDF document by making a HEAD request.
-
-    Parameters:
-    url (str): The URL to check.
-
-    Returns:
-    bool: True if the URL points to a PDF document, False otherwise.
-    """
-    headers = {
-        'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 Chrome/91.0.4472.124 Safari/537.36'
-    }
-
-    try:
-        req = Request(url, headers=headers, method='HEAD')
-        with urlopen(req) as response:
-            content_type = response.info().get_content_type()
-            return content_type == 'application/pdf'
-    except error.URLError as e:
-        print(f"An error occurred while checking the URL: {e}")
-        return False
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return False
-    
-
 def scrape_url(url):
 
     """
@@ -134,11 +89,11 @@ def scrape_url(url):
     """
     
     try:
-        if url.lower().endswith('.pdf') or is_pdf(url):
+        if url.lower().endswith('.pdf') or ('/pdf/' in url):
             extracted_text = scrape_pdf(url)
         else:
             extracted_text = scrape_soup(url)
-        
+       
         if not extracted_text:
             print(f"\nFailed to scrape URL after retries: {url}")
     except Exception as e:
