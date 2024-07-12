@@ -3,6 +3,7 @@ __all__ = ["AnalysisAgent"]
 from xyz.node.agent import Agent
 from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
+import json
 
 
 class AnalysisAgent(Agent):
@@ -33,7 +34,7 @@ class AnalysisAgent(Agent):
 
     def flowing(self, query: str):
         yield 'Generating sub-queries...'
-        yield self.llm_analysis(query=query)
+        yield json.dumps(self.llm_analysis(query=query))
         
 
 analysis_prompt = [
@@ -53,24 +54,12 @@ Instructions:
 3. **Decompose into Sub-Queries:**
    - If the query is complex, divide it into smaller, manageable sub-queries.
    - Do not generate any irrelevant sub-queries. For example, there is no need to understand what an event is if I only want the time when it takes place.
+   - Searches are expensive so please genereate as few sub-queries as possible.
    - Each sub-query should focus on a specific aspect of the main query to facilitate detailed analysis.
    - **Important:** If the original query is simple enough for searching directly, DO NOT generate any sub-queries.
 
 4. **Structured Output:** Provide a structured analysis that includes:
-   - A list of sub-queries.
-
-**Message to the AI Manager:**
-   - For each sub-query, pass the sub-query along to the search agent and let it do an independent search on the sub-query.
-   - After search on the current sub-query is complete, call the search agent again with the next sub-query along.
-   - DO NOT call the response agent until searches on all the sub-queries are completed.
-
-**Example workflow:**
-   1. AnalysisAgent analyzes query and generate sub-queries
-   2. SearchAgent searches over the first sub-query.
-   3. SearchAgent seaches over the next sub-query.
-   4. Repeat seaching until all sub-queries has been searched.
-   5. ResponseAgent generates response based on all of the gathered sources.
-   6. InteractionAgent suggests relevant queries.
+   - A list of sub-queries only.
 
 """
     },
@@ -81,6 +70,8 @@ Now, apply these steps and analyze the query:
 
 **Original query:**
 {query}
+
+The output should be a list of sub-queries only.
 """
     }
 ]

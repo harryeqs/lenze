@@ -24,10 +24,12 @@ class SearchAgent(Agent):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "query": {"type": "string", "description": "The query here which need help. It should passed to the next agent it its original form."},
+                            "sub_queries": {"type": "array", 
+                                            "items": {"type": "string"}, 
+                                            "description": "The sub-queries here which need help. It should passed to the next agent it its original form."},
                             "current_date": {"type": "string", "description": "The current date."}
                         },
-                        "required": ["query", "current_date"],
+                        "required": ["sub_queries", "current_date"],
                     },
                 }
             }
@@ -38,41 +40,47 @@ class SearchAgent(Agent):
         self.opt_agent = LLMAgent(template=opt_prompt, llm_client=llm_client, stream=False)
         self.refine_agent = LLMAgent(template=refine_prompt, llm_client=llm_client, stream=False)
 
-    def flowing(self, query: str, current_date = None):
+    def flowing(self, sub_queries: list, current_date = None):
+        
+        # Initialise sources and counters
+        sources = []
+        counter = 1
 
+        # Get current time
         current_date = datetime.today()
         yield (f'**The current time is:** {current_date}' +
               f'\n --------------------')
-        # Generate optimised query
-        opt_query = self.opt_agent(query=query, current_date=current_date)
-        yield (f'\n**Optimized query:** \n {opt_query}' +
-              f'\n --------------------')
         
-        # Search using optimised query
-        results = google_search(opt_query)
-        yield (f'\n**Search results:** \n {results}' +
-              f'\n --------------------')
-
-        # Refine the search results
-        refined_results = self.refine_agent(query=query, results=results)
-        yield (f'\n**Refined results:** {refined_results}' +
-              f'\n --------------------')
-        results =json.loads(refined_results)
-
-        # scrape URLs contained in search results and returned compiled sources
-        sources = []
-        counter = 1
-        yield ('\n**Scraping texts from refined results.**')
-
-        for result in results:
-            result['text'] = scrape_url(result['link'])
-            result.pop('snippet')
-            sources.append({f'source-{counter}': result})
-            counter += 1
+        for sub_query in sub_queries:
+            # Generate optimised query
+            opt_query = self.opt_agent(sub_query=sub_query, current_date=current_date)
+            yield (f'\n**Optimized query:** \n {opt_query}' +
+                f'\n --------------------')
         
-        local_store(sources)
+            # Search using optimised query
+            results = google_search(opt_query)
+            yield (f'\n**Search results:** \n {results}' +
+                f'\n --------------------')
 
-        yield (f'\n**Sources stored locally, proceed to next step.**\n')
+            # Refine the search results
+            refined_results = self.refine_agent(sub_query=sub_query, results=results)
+            yield (f'\n**Refined results:** {refined_results}' +
+                f'\n --------------------')
+            results =json.loads(refined_results)
+
+            # scrape URLs contained in search results and returned compiled sources
+            
+            yield ('\n**Scraping texts from refined results.**')
+
+            for result in results:
+                result['text'] = scrape_url(result['link'])
+                result.pop('snippet')
+                sources.append({f'source-{counter}': result})
+                counter += 1
+            
+            local_store(sources)
+
+            yield (f"\n**Sources for sub-query '{sub_query}' stored locally, proceed to next step.**\n")
     
 
 
@@ -122,7 +130,7 @@ Create a search query that maximizes accuracy and relevance, aligning with the u
         "content": """
 Now, apply these steps to optimize the following query:
 
-**Sub-query:** {query}
+**Sub-query:** {sub_query}
 
 Do not inclue the steps in the final output. The final output should be a single string of optimised query.
 """
@@ -171,7 +179,7 @@ As a refining agent, your task is to evaluate and refine the returned search res
         "content": """
 Now, apply these steps to refine the returned search results for the following query:
 
-**Sub-query:** {query}
+**Sub-query:** {sub_query}
 
 **Sub-query Results:** {results}
 

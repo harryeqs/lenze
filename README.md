@@ -1,12 +1,11 @@
-# 🔍 **Lenze:** A search chatbot inspired by Perplexity AI.
+# 🔍 **Lenze:** A search engine inspired by Perplexity AI.
 
 ## Features
 Lenze is capable of doing:
 - Search on web on user's query.
 - Retrive summarised information regarding the query.
 - Provide sources to each piece of information.
-- Suggest related questions.
-- Reference conversation history.
+- Suggest relevant queries.
 
 ## Framework
 Lenze utilises the [Netmind.AI-XYZ](https://github.com/protagolabs/Netmind-AI-XYZ) framework to manipulate multiple agents.
@@ -14,7 +13,9 @@ Lenze utilises the [Netmind.AI-XYZ](https://github.com/protagolabs/Netmind-AI-XY
 ## Agents
 Lenze consists of the following agents:
 
-**Search Agent:** Search across the internet on the given query and return a list of sources containing URLs and text content at the URLs.
+**Analysis Agent:** Analyze the query input from the user and break down a complex query into simpler sub-queries if necessary.
+
+**Search Agent:** Search across the internet on a list of given sub-queries and return a list of sources containing URLs and text content at the URLs.
 <br>There are two sub-agents that this agent calls:
 - **Optimization Agent:** Optimize the query for most accurate Google search results.
 - **Refining Agent:** Refined the search results to exclude irrelevant, redundant and unreliable sources.
@@ -26,12 +27,15 @@ Lenze consists of the following agents:
 ## Workflow
 ```mermaid
 graph TB;
-    A[User inputs query] --> B[Agent optimizes query];
-    B --> C[Search online using the optimized query];
-    C --> D[Agent refines search results];
-    D --> E[Scrape text from sites in search results to produce sources];
-    E --> F[Agent analyzes sources and generate response];
-    F --> G[Agent suggests relevant queries]
+    A[User inputs query] --> B[Agent Analyzes query and break it down into sub-queries]
+    B --> C[Agent optimizes sub-query]
+    C --> D[Search online using the optimized query]
+    D --> E[Agent refines search results]
+    E --> F[Scrape text from sites in search results to produce sources]
+    F --> G{More sub-queries?}
+    G -- Yes --> C
+    G -- No --> H[Agent analyzes sources and generate response]
+    H --> I[Agent suggests relevant queries]
 ```
 
 ## Getting Started
