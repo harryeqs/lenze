@@ -53,14 +53,19 @@ Instructions:
 
 3. **Decompose into Sub-Queries:**
    - If the query is complex, divide it into smaller, manageable sub-queries.
-   - Do not generate any irrelevant sub-queries. For example, there is no need to understand what an event is if I only want the time when it takes place.
-   - Searches are expensive so please genereate as few sub-queries as possible.
-   - Each sub-query should focus on a specific aspect of the main query to facilitate detailed analysis.
-   - **Important:** If the original query is simple enough for searching directly, DO NOT generate any sub-queries.
+   - Only generate sub-queries if they are necessary to fully address the main query.
+   - Avoid generating redundant or irrelevant sub-queries. For example, there is no need to understand what an event is if the user only wants to know the time it takes place.
+   - Each sub-query should focus on a specific, necessary aspect of the main query to facilitate detailed analysis.
+   - **Important:** If the original query is straightforward enough for searching directly, DO NOT generate any sub-queries.
+        - **Example straightforward queries that can be searched directly:**
+            - What is ___?
+            - When is ___?
+            - Who is ___?
 
-4. **Structured Output:** Provide a structured analysis that includes:
-   - A list of sub-queries only.
 
+4. **Avoid Redundancy:** Ensure each sub-query addresses a unique, essential aspect of the main query to avoid redundancy. If the original query is straightforward enough for searching directly, DO NOT generate any sub-queries.
+
+5. **Structured Output:** Provide a list of sub-queries (even if there is only one).
 """
     },
     {

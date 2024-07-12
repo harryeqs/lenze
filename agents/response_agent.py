@@ -85,6 +85,8 @@ Instructions for Responding to the Original Query:
 **Emphasis**:
     - Focus strictly on core information needed to answer the user's query.
     - Avoid including irrelevant or redundant information.
+
+**Message to AI Manager:** The next agent to be called after the ResponseAgent should be the InteractionAgent.
 """ },
     {
         "role": "user",

@@ -3,10 +3,11 @@ from urllib import error
 from io import BytesIO
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import fitz
 import time
 
-def scrape_soup(url, retries=3, timeout=3, max_content = 3000):
+def scrape_soup(url, retries=2, timeout=2, max_content = 3000):
     """
     Scrapes text content from an HTML-based page.
 
@@ -16,9 +17,14 @@ def scrape_soup(url, retries=3, timeout=3, max_content = 3000):
     Returns:
     str: The extracted text content from the webpage.
     """
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Enable headless mode
+    chrome_options.add_argument("--disable-gpu")  # Disable GPU usage
+    chrome_options.add_argument("--no-sandbox")  # Bypass OS security model
+
     while retries > 0:
         try:
-            driver = webdriver.Chrome()
+            driver = webdriver.Chrome(options=chrome_options)
             driver.set_page_load_timeout(timeout)  
             driver.get(url)
 
@@ -36,9 +42,9 @@ def scrape_soup(url, retries=3, timeout=3, max_content = 3000):
             print(f"Exception: An unexpected error occurred while accessing URL: {url}. Exception: {e}. Retries left: {retries-1}")
         retries -= 1
         time.sleep(1)  # Backoff before retrying
-    return ""  # Return None if all retries fail   
+    return ""  # Return None if all retries fail 
 
-def scrape_pdf(url, retries=3, timeout=3, max_content = 5000):
+def scrape_pdf(url, retries=2, timeout=2, max_content = 5000):
     """
     Scrapes text content from a given PDF page.
 

@@ -9,10 +9,9 @@ from agents.analysis_agent import AnalysisAgent
 from tools.data_store import local_empty
 
 if __name__ == "__main__":
-    # args = set_args()
     # Initialize sources storage
     local_empty()
-    llm_client = OpenAIClient(model="gpt-4-turbo", temperature=0)
+    llm_client = OpenAIClient(model="gpt-3.5-turbo", temperature=0)
 
     analysis_agent = AnalysisAgent(llm_client)
     search_agent = SearchAgent(llm_client)
