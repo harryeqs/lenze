@@ -1,7 +1,7 @@
 import time
 from langchain_community.utilities import SearxSearchWrapper
 
-search = SearxSearchWrapper(searx_host="https://search.bus-hit.me/")
+search = SearxSearchWrapper(searx_host="http://127.17.0.2:80/")
 
 def searx(query, num_of_results=10, max_retries=3, initial_delay=1):
     """

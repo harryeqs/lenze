@@ -16,7 +16,7 @@ class InteractionAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "InteractionAgent",
-                    "description": "This function can suggest new related queries based on recent queries and responses.",
+                    "description": "This function can suggest new related queries based on recent queries and responses. To be called after the ResponseAgent.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -48,7 +48,7 @@ You are an assistant designed to suggest three related queries based on the most
 3. Ensure the new queries are diverse and cover different aspects or follow-up points related to the response.
 4. Utilize the entire chat history, accessed via internal means, to understand the context and generate meaningful, connected queries.
 5. Avoid redundancy by ensuring the new queries introduce fresh perspectives or areas of inquiry.
-6. Keep the queries moderately short.
+6. The new queries should each be no more than 15 words.
 """},
     {
         "role": "user",

@@ -17,7 +17,7 @@ class ResponseAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "ResponseAgent",
-                    "description": "This function can analyse and produce a concise response to an original query based on sources provided. Not to be called until all sub-queries have been searched by the SearchAgent.",
+                    "description": "This function can analyse and produce a concise response to an original query based on sources provided. To be called only once.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -86,7 +86,7 @@ Instructions for Responding to the Original Query:
     - Focus strictly on core information needed to answer the user's query.
     - Avoid including irrelevant or redundant information.
 
-**Message to AI Manager:** The next agent to be called after the ResponseAgent should be the InteractionAgent.
+**Message to AI Manager:** The ResponseAgent should run ONLY ONCE. DO NOT repeated call the response agent. Please remember to call the InteractionAgent after the ResponseAgent finishes its job.
 """ },
     {
         "role": "user",

@@ -19,7 +19,7 @@ class SearchAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "SearchAgent",
-                    "description": "This agent can search across the internet on a sub-query provided by the user by following the searching process and return a list of raw source data. To be called multiple times on multiple sub-queries.",
+                    "description": "This agent can search across the internet on a sub-query provided by the user by following the searching process and return a list of raw source data. To be called only once.",
 
                     "parameters": {
                         "type": "object",
@@ -42,8 +42,7 @@ class SearchAgent(Agent):
 
     def flowing(self, sub_queries: list, current_date = None):
         
-        # Initialise sources and counters
-        sources = []
+        # Initialise counter
         counter = 1
 
         # Get current time
@@ -52,6 +51,7 @@ class SearchAgent(Agent):
               f'\n --------------------')
         
         for sub_query in sub_queries:
+            sources = []
             # Generate optimised query
             opt_query = self.opt_agent(sub_query=sub_query, current_date=current_date)
             yield (f'\n**Optimized query:** \n {opt_query}' +
@@ -103,10 +103,9 @@ Steps to Optimize the Query:
 3. **Use Operators:**
    - Utilize Google search operators to narrow down the results only when necessary:
      - Use the minus sign (-) to exclude unwanted terms.
-     - Use the site: operator to limit results to a specific website or domain.
      - Use the filetype: operator to find specific types of files (e.g., PDFs, DOCs).
      - Use the intitle (only when necessary): operator to ensure the main keyword appears in the title of the results.
-   - *Important*: DO NOT use quotation marks.
+   - *Important*: DO NOT use quotation marks or sites.
 
 4. **Incorporate Filters:**
    - Add filters like location, date range, or language to make the search results more relevant.
