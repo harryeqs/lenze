@@ -85,6 +85,7 @@ Instructions for Responding to the Original Query:
 **Emphasis**:
     - Focus strictly on core information needed to answer the user's query.
     - Avoid including irrelevant or redundant information.
+    - If no answer can be provided, please stop and inform the user.
 
 **Message to AI Manager:** The ResponseAgent should run ONLY ONCE. DO NOT repeated call the response agent. Please remember to call the InteractionAgent after the ResponseAgent finishes its job.
 """ },

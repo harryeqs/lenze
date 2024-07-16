@@ -1,13 +1,12 @@
-from urllib.request import Request, urlopen
-from urllib import error
-from io import BytesIO
+import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 import fitz
+from io import BytesIO
+import aiohttp
+import asyncio
 import time
 
-def scrape_soup(url, retries=2, timeout=2, max_content = 3000):
+async def scrape_soup_async(url, session, retries=2, timeout=2, max_content=3000):
     """
     Scrapes text content from an HTML-based page.
 
@@ -17,34 +16,30 @@ def scrape_soup(url, retries=2, timeout=2, max_content = 3000):
     Returns:
     str: The extracted text content from the webpage.
     """
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Enable headless mode
-    chrome_options.add_argument("--disable-gpu")  # Disable GPU usage
-    chrome_options.add_argument("--no-sandbox")  # Bypass OS security model
-
     while retries > 0:
         try:
-            driver = webdriver.Chrome(options=chrome_options)
-            driver.set_page_load_timeout(timeout)  
-            driver.get(url)
-
-            soup = BeautifulSoup(driver.page_source, "html.parser")
-            title = soup.find('title')
-            body = soup.find_all('p')
-            text = title.get_text()
-            
-            for paragraph in body:
-                text = '\n'.join([text, paragraph.get_text()])
-            return text[:max_content]
-        except error.URLError as e:
-            print(f"URLError: Unable to access URL: {url}. Reason: {e.reason}. Retries left: {retries-1}")
-        except Exception as e:
-            print(f"Exception: An unexpected error occurred while accessing URL: {url}. Exception: {e}. Retries left: {retries-1}")
+            async with session.get(url, timeout=timeout) as response:
+                if response.status != 200:
+                    raise aiohttp.ClientError(f"Failed to fetch {url}, status code: {response.status}")
+                content = await response.text()
+                soup = BeautifulSoup(content, "html.parser")
+                main_content = soup.find('main') or soup.find('article') or soup.body
+                
+                text = ""
+                if main_content:
+                    title = soup.find('title').get_text() if soup.find('title') else ""
+                    paragraphs = main_content.find_all('p')
+                    text = title
+                    for paragraph in paragraphs:
+                        text += '\n' + paragraph.get_text()
+                return text[:max_content]
+        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+            print(f"Error: Unable to access URL: {url}. Exception: {e}. Retries left: {retries-1}")
         retries -= 1
-        time.sleep(1)  # Backoff before retrying
-    return ""  # Return None if all retries fail 
+        await asyncio.sleep(1)  # Backoff before retrying
+    return ""
 
-def scrape_pdf(url, retries=2, timeout=2, max_content = 5000):
+def scrape_pdf(url, retries=2, timeout=2, max_content=5000):
     """
     Scrapes text content from a given PDF page.
 
@@ -56,13 +51,13 @@ def scrape_pdf(url, retries=2, timeout=2, max_content = 5000):
     """
     while retries > 0:
         try:
-            req = Request(url=url, headers={'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 Chrome/91.0.4472.124 Safari/537.36'})
-            with urlopen(req, timeout=timeout) as response:
-                content_type = response.info().get_content_type()
+            response = requests.get(url, timeout=timeout, headers={'User-Agent': 'Mozilla/5.0'})
+            if response.status_code == 200:
+                content_type = response.headers.get('Content-Type')
                 if content_type != 'application/pdf':
                     raise ValueError("The URL does not point to a PDF file.")
                 
-                remote_file = response.read()
+                remote_file = response.content
                 memory_file = BytesIO(remote_file)
                 pdf_document = fitz.open(stream=memory_file, filetype='pdf')
 
@@ -72,37 +67,55 @@ def scrape_pdf(url, retries=2, timeout=2, max_content = 5000):
                     text += page.get_text()
 
                 return text[:max_content]
-
-        except error.URLError as e:
-            print(f"URLError: Unable to access URL: {url}. Reason: {e.reason}. Retries left: {retries-1}")
-        except Exception as e:
-            print(f"Exception: An unexpected error occurred while accessing URL: {url}. Exception: {e}. Retries left: {retries-1}")
+        except requests.RequestException as e:
+            print(f"RequestException: Unable to access URL: {url}. Reason: {e}. Retries left: {retries-1}")
         retries -= 1
         time.sleep(1)  # Backoff before retrying    
+    return ""
 
-        return ""
-
-def scrape_url(url):
-
+async def scrape_url_async(url, session):
     """
-    Scrapes text contents from a list of URLs.
+    Scrapes text content from a single URL asynchronously.
 
     Parameters:
     url (str): The URL to scrape.
+    session (aiohttp.ClientSession): The aiohttp session.
 
     Returns:
     str: The extracted text content.
     """
-    
     try:
         if url.lower().endswith('.pdf') or ('/pdf/' in url):
-            extracted_text = scrape_pdf(url)
+            return scrape_pdf(url)
         else:
-            extracted_text = scrape_soup(url)
-       
-        if not extracted_text:
-            print(f"\nFailed to scrape URL after retries: {url}")
+            return await scrape_soup_async(url, session)
     except Exception as e:
-        print(f"\nError: Unable to access URL: {url}. Exception: {e}")
-    
-    return extracted_text
+        print(f"Exception: Unable to access URL: {url}. Exception: {e}")
+    return ""
+
+async def scrape_urls_async(urls):
+    """
+    Scrapes text content from a list of URLs asynchronously.
+
+    Parameters:
+    urls (list): The list of URLs to scrape.
+
+    Returns:
+    list: The list of extracted text content from each URL.
+    """
+    async with aiohttp.ClientSession() as session:
+        tasks = [scrape_url_async(url, session) for url in urls]
+        return await asyncio.gather(*tasks)
+
+def scrape_urls(urls):
+    """
+    Wrapper function to run the async scraper.
+
+    Parameters:
+    urls (list): The list of URLs to scrape.
+
+    Returns:
+    list: The list of extracted text content from each URL.
+    """
+    return asyncio.run(scrape_urls_async(urls))
+

@@ -4,7 +4,7 @@ from xyz.node.agent import Agent
 from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
 from tools.google_search import google_search
-from tools.web_scraper import scrape_url
+from tools.web_scraper import scrape_urls
 from tools.data_store import local_store
 from datetime import datetime
 import json
@@ -43,7 +43,6 @@ class SearchAgent(Agent):
     def flowing(self, sub_queries: list, current_date = None):
         
         # Initialise counter
-        counter = 1
 
         # Get current time
         current_date = datetime.today()
@@ -51,7 +50,6 @@ class SearchAgent(Agent):
               f'\n --------------------')
         
         for sub_query in sub_queries:
-            sources = []
             # Generate optimised query
             opt_query = self.opt_agent(sub_query=sub_query, current_date=current_date)
             yield (f'\n**Optimized query:** \n {opt_query}' +
@@ -72,8 +70,14 @@ class SearchAgent(Agent):
             
             yield ('\n**Scraping texts from refined results.**')
 
-            for result in results:
-                result['text'] = scrape_url(result['link'])
+            urls = [result['link'] for result in results]
+            scraped_texts = scrape_urls(urls)
+
+            sources = []
+            counter = 1
+
+            for result, text in zip(results, scraped_texts):
+                result['text'] = text
                 result.pop('snippet')
                 sources.append({f'source-{counter}': result})
                 counter += 1
@@ -168,7 +172,7 @@ As a refining agent, your task is to evaluate and refine the returned search res
    - Exclude results that are overly commercial, biased, or irrelevant.
    - Remove redundant results that provide identical or very similar information to ensure a variety of unique sources.
 
-7. **Output Format:** Return the 5 most relevant results. Ensure the refined results are in the same format as the original results.
+7. **Output Format:** Return the 5 most relevant results at maximum. Ensure the refined results are in the same format as the original results.
 
 **Important**: ALWAYS remind yourself of the current sub query.
 """
