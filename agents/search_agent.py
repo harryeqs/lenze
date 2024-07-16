@@ -43,6 +43,7 @@ class SearchAgent(Agent):
     def flowing(self, sub_queries: list, current_date = None):
         
         # Initialise counter
+        counter = 1
 
         # Get current time
         current_date = datetime.today()
@@ -74,7 +75,6 @@ class SearchAgent(Agent):
             scraped_texts = scrape_urls(urls)
 
             sources = []
-            counter = 1
 
             for result, text in zip(results, scraped_texts):
                 result['text'] = text

@@ -7,7 +7,7 @@ import time
 from typing import List
 from playwright.async_api import async_playwright
 
-async def scrape_js_rendered_page(url: str, wait_time: int = 5, max_content: int = 3000) -> str:
+async def scrape_js_rendered_page(url: str, wait_time: int = 5, max_content: int = 5000) -> str:
     """
     Scrapes text content from a JavaScript-rendered web page using Playwright.
 
