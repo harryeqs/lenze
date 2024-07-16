@@ -75,7 +75,7 @@ Instructions for Responding to the Original Query:
 
 5. Cite Sources Appropriately:
     - Each piece of information should have a citation.
-    - Use strictly the format (source: www.examples.com) to ensure clarity.
+    - Use strictly the format (source: <full url>) to ensure clarity.
 
 6. Format the Final Answer:
     - Structure the answer for readability.
@@ -99,7 +99,7 @@ Remember to use the original query not the sub-queries.
 **Sources:**
 {sources}
 
-The final output should address the query and provide citations for each piece of information strictly in the format (source: www.examples.com). Please do not include the steps.
+The final output should address the query and provide citations for each piece of information strictly in the format (source: <full url>). Please do not include the steps.
 Ensure that the link to the source is included in the citation.
 """
     }

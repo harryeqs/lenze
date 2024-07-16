@@ -51,8 +51,8 @@ Instructions:
    - Main subject or topic
    - Specific details or requirements
 
-3. **Decompose into Sub-Queries: (only when necessary)**
-   - Only generate sub-queries when the original query involves a comparison between different items, aspects, or concepts.
+3. **Decompose into Sub-Queries:**
+   - ONLY generate sub-queries when the original query involves a comparison between different items, aspects, or concepts.
    - When the generated sub-queries are similar to each other, merge them into one single sub-query.
    - Do not include word 'compare' in the sub-queries. The comparison will be done by the ResponseAgent.
    - Ensure sub-queries are directly aligned with the original query's context and requirements.
