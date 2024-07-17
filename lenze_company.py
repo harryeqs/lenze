@@ -7,6 +7,7 @@ from agents.interaction_agent import InteractionAgent
 from agents.analysis_agent import AnalysisAgent
 
 from tools.source_store import initialize_db
+import time
 
 if __name__ == "__main__":
     # Initialize sources storage
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     response_agent = ResponseAgent(llm_client)
     interaction_agent = InteractionAgent(llm_client)
 
-    staffs = [analysis_agent, search_agent, response_agent, interaction_agent]
+    staffs = [analysis_agent, search_agent, response_agent]
 
     company = AutoCompany(llm_client=llm_client)
 
@@ -27,4 +28,10 @@ if __name__ == "__main__":
 
     query = input("\n========Welcome!========\nI am Lenze and I will help you with any query by searching online.\nPlease input your query: ")
     print("\n=======Calling the Company========")
+    start_time = time.time()
+
     company(user_input=query)
+
+    end_time = time.time()
+    time_taken = f"Response took {end_time - start_time:.4f} seconds"
+    print(time_taken)

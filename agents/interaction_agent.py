@@ -58,5 +58,5 @@ Last query:
 Last response:
 {response}
 
-Please provide 5 related queries inspired by the latest pair of query and response, utilizing the entire chat history for context.
+Please provide 3 related queries inspired by the latest pair of query and response, utilizing the entire chat history for context.
 """}]

@@ -7,7 +7,7 @@ import time
 from typing import List
 from playwright.async_api import async_playwright
 
-async def scrape_js_rendered_page(url: str, wait_time: int = 5, max_content: int = 5000) -> str:
+async def scrape_js_rendered_page(url: str, timeout: int = 1, max_content: int = 5000) -> str:
     """
     Scrapes text content from a JavaScript-rendered web page using Playwright.
 
@@ -23,7 +23,7 @@ async def scrape_js_rendered_page(url: str, wait_time: int = 5, max_content: int
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
         await page.goto(url)
-        await page.wait_for_timeout(wait_time)
+        await page.wait_for_timeout(timeout)
         html_content = await page.content()
         await browser.close()
 
@@ -39,7 +39,7 @@ async def scrape_js_rendered_page(url: str, wait_time: int = 5, max_content: int
             text += '\n' + paragraph.get_text()
     return text[:max_content]
 
-def scrape_pdf(url: str, retries: int = 2, timeout: int = 2, max_content: int = 5000) -> str:
+def scrape_pdf(url: str, retries: int = 1, timeout: int = 1, max_content: int = 5000) -> str:
     """
     Scrapes text content from a given PDF page.
 
@@ -119,5 +119,6 @@ def scrape_urls(urls: List[str]) -> List[str]:
 
     Returns:
     list: The list of extracted text content from each URL.
-    """
+    """ 
+
     return asyncio.run(scrape_urls_async(urls))

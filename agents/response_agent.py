@@ -49,7 +49,7 @@ response_prompt = [
 
 Note to AI Manager:
     - Execute the Response Agent only after gathering all sources through multiple calls by the Search Agent on each sub-query.
-    - Do not call the Response Agent repeatedly. It should run only once.
+    - DO NOT call the Response Agent repeatedly. It should run only once.
     - Run the Interaction Agent after the Response Agent completes.
 
 As a response agent, your task is to respond to the original query based on the extracted text content from the refined search results. Follow these steps to ensure a concises and accurate response.

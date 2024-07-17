@@ -8,6 +8,7 @@ from tools.web_scraper import scrape_urls
 from tools.source_store import local_store
 from datetime import datetime
 import json
+import time
 
 class SearchAgent(Agent):
 
@@ -38,7 +39,6 @@ class SearchAgent(Agent):
         self.output_type = "list"
 
         self.opt_agent = LLMAgent(template=opt_prompt, llm_client=llm_client, stream=False)
-        self.refine_agent = LLMAgent(template=refine_prompt, llm_client=llm_client, stream=False)
 
     def flowing(self, sub_queries: list, current_date = None):
         
@@ -63,10 +63,13 @@ class SearchAgent(Agent):
 
             # scrape URLs contained in search results and returned compiled sources
             
-            yield ('\n**Scraping texts from results.**')
-
+            yield ('\n**Scraping texts from results.**\n')
+            start_time = time.time()
             urls = [result['link'] for result in results]
             scraped_texts = scrape_urls(urls)
+            end_time = time.time()
+            time_taken = f"Scraping took {end_time - start_time:.4f} seconds"
+            print(time_taken)
 
             sources = []
 

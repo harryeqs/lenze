@@ -30,12 +30,13 @@ graph TB;
     A[User inputs query] --> B[Agent Analyzes query and break it down into sub-queries]
     B --> C[Agent optimizes sub-query]
     C --> D[Search online using the optimized query]
-    D --> E[Agent refines search results]
-    E --> F[Scrape text from sites in search results to produce sources]
+    D --> E[Scrape text from sites in search results to produce sources]
+    E --> F[Generate embeddings for each source]
     F --> G{More sub-queries?}
     G -- Yes --> C
-    G -- No --> H[Agent analyzes sources and generate response]
-    H --> I[Agent suggests relevant queries]
+    G -- No --> H[Find the most relevant sources by comparing embeddings of query to sources]
+    H --> I[Agent analyzes sources and generate response]
+    I --> J[Agent suggests relevant queries]
 ```
 
 ## Getting Started

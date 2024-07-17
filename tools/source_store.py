@@ -4,6 +4,7 @@ import numpy as np
 from transformers import BertTokenizer, BertModel
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
+import time
 
 DB_PATH = 'data/sources.db'
 
@@ -30,14 +31,20 @@ def initialize_db():
     conn.commit()
     conn.close()
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)
+
 def generate_embedding(text):
     """
     Generate a BERT embedding for the given text.
     """
-    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
+    start_time = time.time()
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512).to(device)
     with torch.no_grad():
         outputs = model(**inputs)
-    embedding = outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
+    embedding = outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
+    end_time = time.time()
+    print(f"Embedding generation took {end_time - start_time:.4f} seconds")
     return embedding.tobytes()
 
 def local_store(data):
