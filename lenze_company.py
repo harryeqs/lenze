@@ -20,7 +20,7 @@ if __name__ == "__main__":
     response_agent = ResponseAgent(llm_client)
     interaction_agent = InteractionAgent(llm_client)
 
-    staffs = [analysis_agent, search_agent, response_agent]
+    staffs = [analysis_agent, search_agent, response_agent, interaction_agent]
 
     company = AutoCompany(llm_client=llm_client)
 
