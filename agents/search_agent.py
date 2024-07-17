@@ -42,8 +42,10 @@ class SearchAgent(Agent):
 
     def flowing(self, sub_queries: list, current_date = None):
         
-        # Initialise counter
+        # Initialise
         counter = 1
+        all_results = []
+        sources = []
 
         # Get current time
         current_date = datetime.today()
@@ -60,27 +62,23 @@ class SearchAgent(Agent):
             results = json.loads(google_search(opt_query))
             yield (f'\n**Search results:** \n {results}' +
                 f'\n --------------------')
+            all_results += results
 
             # scrape URLs contained in search results and returned compiled sources
-            
-            yield ('\n**Scraping texts from results.**\n')
-            start_time = time.time()
-            urls = [result['link'] for result in results]
-            scraped_texts = scrape_urls(urls)
-            end_time = time.time()
-            time_taken = f"Scraping took {end_time - start_time:.4f} seconds"
-            print(time_taken)
 
-            sources = []
+        yield ('\n**Scraping texts from results.**\n')
+        start_time = time.time()
+        urls = [result['link'] for result in results]
+        scraped_texts = scrape_urls(urls)
+        end_time = time.time()
+        time_taken = f"Scraping took {end_time - start_time:.4f} seconds"
+        print(time_taken)
 
-            for result, text in zip(results, scraped_texts):
-                result['text'] = text
-                result.pop('snippet')
-                sources.append(result)
-            
-            local_store(sources)
-
-            yield (f"\n**Sources for sub-query '{sub_query}' stored locally, proceed to next step.**\n")
+        for result, text in zip(results, scraped_texts):
+            result['text'] = text
+            sources.append(result)
+        
+        local_store(sources)
     
 
 
