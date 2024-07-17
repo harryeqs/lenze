@@ -6,7 +6,7 @@ from agents.response_agent import ResponseAgent
 from agents.interaction_agent import InteractionAgent
 from agents.analysis_agent import AnalysisAgent
 
-from tools.data_store import local_empty
+from tools.json_store import local_empty
 
 if __name__ == "__main__":
     # Initialize sources storage

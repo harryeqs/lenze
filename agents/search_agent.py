@@ -5,7 +5,7 @@ from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
 from tools.google_search import google_search
 from tools.web_scraper import scrape_urls
-from tools.data_store import local_store
+from tools.json_store import local_store
 from datetime import datetime
 import json
 
@@ -57,19 +57,21 @@ class SearchAgent(Agent):
                 f'\n --------------------')
         
             # Search using optimised query
-            results = google_search(opt_query)
+            results = json.loads(google_search(opt_query))
             yield (f'\n**Search results:** \n {results}' +
                 f'\n --------------------')
 
+            """
             # Refine the search results
             refined_results = self.refine_agent(sub_query=sub_query, results=results)
             yield (f'\n**Refined results:** {refined_results}' +
                 f'\n --------------------')
             results =json.loads(refined_results)
+            """
 
             # scrape URLs contained in search results and returned compiled sources
             
-            yield ('\n**Scraping texts from refined results.**')
+            yield ('\n**Scraping texts from results.**')
 
             urls = [result['link'] for result in results]
             scraped_texts = scrape_urls(urls)

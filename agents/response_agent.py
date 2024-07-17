@@ -3,7 +3,7 @@ __all__ = ["ResponseAgent"]
 from xyz.node.agent import Agent
 from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
-from tools.data_store import local_read
+from tools.json_store import local_read
 import concurrent
 import sys
 
@@ -17,7 +17,7 @@ class ResponseAgent(Agent):
                 "type": "function",
                 "function": {
                     "name": "ResponseAgent",
-                    "description": "This function can analyse and produce a concise response to an original query based on sources provided. To be called only once.",
+                    "description": "This function can analyse and produce a concise response to an original query based on sources provided. To be called ONLY ONCE.",
                     "parameters": {
                         "type": "object",
                         "properties": {

@@ -22,7 +22,7 @@ def google_search(search_term, api_key=my_api_key, cse_id=my_cse_id, attempts=3,
     service = build("customsearch", "v1", developerKey=api_key)
 
     for attempt in range(attempts):
-        res = service.cse().list(q=search_term, cx=cse_id, num=10, **kwargs).execute()
+        res = service.cse().list(q=search_term, cx=cse_id, num=5, **kwargs).execute()
         if 'items' in res:
             full_results = res['items']
             results = [{'link': result['link'], 'snippet': result['snippet']} for result in full_results]
