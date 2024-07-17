@@ -6,11 +6,12 @@ from agents.response_agent import ResponseAgent
 from agents.interaction_agent import InteractionAgent
 from agents.analysis_agent import AnalysisAgent
 
-from tools.json_store import local_empty
+from tools.source_store import initialize_db
 
 if __name__ == "__main__":
     # Initialize sources storage
-    local_empty()
+    initialize_db()
+    
     llm_client = OpenAIClient(model="gpt-3.5-turbo", temperature=0)
 
     analysis_agent = AnalysisAgent(llm_client)

@@ -3,9 +3,8 @@ __all__ = ["ResponseAgent"]
 from xyz.node.agent import Agent
 from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
-from tools.json_store import local_read
-import concurrent
-import sys
+from tools.source_store import local_read, generate_embedding, find_most_relevant_sources
+import numpy as np
 
 class ResponseAgent(Agent):
 
@@ -33,15 +32,13 @@ class ResponseAgent(Agent):
 
         self.llm_response = LLMAgent(template=response_prompt, llm_client=llm_client, stream=True)
 
-    def flowing(self, query: str, timeout=10):
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(self.llm_response, query=query, sources=local_read())
-            try:
-                result = future.result(timeout=timeout)
-                return result
-            except concurrent.futures.TimeoutError:
-                print("The operation timed out. Terminating the program.")
-                sys.exit(1)
+    def flowing(self, query: str):
+
+        query_embedding = generate_embedding(query)
+        sources = local_read()
+        most_relevant_sources = find_most_relevant_sources(np.frombuffer(query_embedding, dtype=np.float32), sources)
+        
+        return self.llm_response(query=query, sources=most_relevant_sources)
 
         
 

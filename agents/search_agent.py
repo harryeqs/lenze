@@ -5,7 +5,7 @@ from xyz.utils.llm.openai_client import OpenAIClient
 from xyz.node.basic.llm_agent import LLMAgent
 from tools.google_search import google_search
 from tools.web_scraper import scrape_urls
-from tools.json_store import local_store
+from tools.source_store import local_store
 from datetime import datetime
 import json
 
@@ -61,14 +61,6 @@ class SearchAgent(Agent):
             yield (f'\n**Search results:** \n {results}' +
                 f'\n --------------------')
 
-            """
-            # Refine the search results
-            refined_results = self.refine_agent(sub_query=sub_query, results=results)
-            yield (f'\n**Refined results:** {refined_results}' +
-                f'\n --------------------')
-            results =json.loads(refined_results)
-            """
-
             # scrape URLs contained in search results and returned compiled sources
             
             yield ('\n**Scraping texts from results.**')
@@ -81,8 +73,7 @@ class SearchAgent(Agent):
             for result, text in zip(results, scraped_texts):
                 result['text'] = text
                 result.pop('snippet')
-                sources.append({f'source-{counter}': result})
-                counter += 1
+                sources.append(result)
             
             local_store(sources)
 
@@ -138,57 +129,6 @@ Now, apply these steps to optimize the following query:
 **Sub-query:** {sub_query}
 
 Do not inclue the steps in the final output. The final output should be a single string of optimised query.
-"""
-    }
-]
-
-refine_prompt = [
-    {
-        "role": "system",
-        "content": """
-As a refining agent, your task is to evaluate and refine the returned search results from an optimized Google search query to ensure they meet the user's needs accurately and comprehensively. Follow these steps to refine the results:
-
-1. **Analyze Initial Results:** 
-    - Review the top results returned by the Google search.
-    - Each result is provided as a JSON object containing a link and a snippet. Pay close attention to these details.
-
-2. **Relevance Check:** 
-    - Assess each result for relevance to the original query.
-    - Avoid discarding results that are partially relevant if they can still provide useful information.
-    - **Important:** Please keep the results even if they are not exact match.
-
-3. **Authority and Credibility:** 
-    - Evaluate the credibility of the sources. Prioritize results from authoritative, trustworthy, and relevant websites (e.g., .edu, .gov, established news sites, and reputable industry-specific sites).
-
-4. **Content Quality:** 
-    - Examine the quality of the content within the top results. 
-    - Look for comprehensive, well-researched, and up-to-date information. 
-    - Retain results that are partially relevant but provide valuable information that could be useful.
-
-5. **Diversity of Perspectives:** 
-    - Ensure a diversity of perspectives and information types are represented. 
-    - Include results that offer different viewpoints, in-depth analyses, and various content formats (e.g., articles, videos, infographics).
-
-6. **Filtering, Exclusion, and Redundancy Removal:** 
-   - Remove any results that do not meet the criteria for relevance, credibility, and content quality.
-   - Exclude results that are overly commercial, biased, or irrelevant.
-   - Remove redundant results that provide identical or very similar information to ensure a variety of unique sources.
-
-7. **Output Format:** Return the 5 most relevant results at maximum. Ensure the refined results are in the same format as the original results.
-
-**Important**: ALWAYS remind yourself of the current sub query.
-"""
-    },
-    {
-        "role": "user",
-        "content": """
-Now, apply these steps to refine the returned search results for the following query:
-
-**Sub-query:** {sub_query}
-
-**Sub-query Results:** {results}
-
-Do not inclue the steps in the final output. The final output should be a single list of refined search results only. Do not include any explanation or narration.
 """
     }
 ]
