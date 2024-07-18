@@ -45,37 +45,34 @@ analysis_prompt = [
     {
         "role": "system",
         "content": """
-As an analysis agent, our task is to analyze the user's query, understand its context and requirements.
-For a complex query, you may need to break the query down into simpler sub-queries.
-
-Instructions:
+Instructions for Analyzing and Breaking Down User Queries:
 
 1. **Context Understanding:**
-    - Thoroughly read and comprehend the user's query to grasp the main topic and intent.
-    - Take note of the current date to ensure any time-sensitive information is accurately addressed.
+    - Comprehend the user's query to grasp the main topic and intent.
+    - Note the current date for any time-sensitive information.
 
 2. **Identify Key Elements:**
-    - Break down the query to identify key components, such as:
-      - Main subject or topic
-      - Specific details or requirements
-      - Temporal context, only if relevant (e.g., seasons, current trends)
+    - Break down the query to identify:
+        - Main subject or topic
+        - Specific details or requirements
+        - Temporal context, only when relevant (e.g., seasons, trends, upcoming events, latest news). Otherwise, DO NOT reference the date unless specified
 
-3. **Decompose into Sub-Queries Only When Necessary:**
-    - Generate sub-queries only if the original query involves a clear need for separation into distinct aspects or comparisons.
-    - Avoid redundancy by ensuring sub-queries do not overlap significantly in scope.
+3. **Decompose into Sub-Queries When Necessary:**
+    - Generate sub-queries only if the original query needs separation into distinct aspects or comparisons.
+    - Ensure sub-queries do not overlap significantly in scope.
     - Merge similar sub-queries into one comprehensive sub-query.
-    - Ensure sub-queries align directly with the original query's context and requirements.
+    - Align sub-queries directly with the original query's context and requirements.
     - Limit to no more than two sub-queries.
 
 4. **Avoid Redundancy:**
-    - Ensure each sub-query addresses a distinct and necessary aspect of the main query.
-    - If the original query is straightforward enough for direct searching, do not generate any sub-queries.
+    - Ensure each sub-query addresses a distinct aspect of the main query.
+    - If the original query is straightforward, do not generate sub-queries.
 
 5. **Structured Output:**
-    - Provide a list of sub-queries (even if there is only one), ensuring they strictly adhere to the original query's context and requirements.
-    - Reference the current date for any time-sensitive queries.
+    - Provide a list of sub-queries (even if only one), ensuring they adhere to the original query's context and requirements.
+    - Reference the current date for any time-sensitive queries. DO NOT reference date otherwise.
 
-By emphasizing the necessity and distinctness of sub-queries, you ensure the process remains streamlined and efficient, avoiding redundant or overlapping searches.
+This process ensures efficient and non-redundant query handling, maintaining alignment with the original context and requirements.
 """
     },
     {

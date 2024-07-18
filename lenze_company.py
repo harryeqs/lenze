@@ -3,7 +3,6 @@ from xyz.utils.llm.openai_client import OpenAIClient
 
 from agents.search_agent import SearchAgent
 from agents.response_agent import ResponseAgent
-from agents.interaction_agent import InteractionAgent
 from agents.analysis_agent import AnalysisAgent
 
 from tools.source_store import initialize_db
@@ -18,7 +17,6 @@ if __name__ == "__main__":
     analysis_agent = AnalysisAgent(llm_client)
     search_agent = SearchAgent(llm_client)
     response_agent = ResponseAgent(llm_client)
-    interaction_agent = InteractionAgent(llm_client)
 
     staffs = [analysis_agent, search_agent, response_agent]
 

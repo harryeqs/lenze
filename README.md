@@ -20,9 +20,7 @@ Lenze consists of the following agents:
 - **Optimization Agent:** Optimize the query for most accurate Google search results.
 - **Refining Agent:** Refined the search results to exclude irrelevant, redundant and unreliable sources.
 
-**Response Agent:** Analyze the extracted information and generate a concise response to user's query.
-
-**Interaction Agent:** Generate related questions and answer further questions, with reference to conversation history.
+**Response Agent:** Analyze the extracted information and generate a concise response to user's query and generate related queries.
 
 ## Workflow
 ```mermaid

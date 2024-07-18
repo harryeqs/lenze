@@ -25,7 +25,7 @@ def google_search(search_term, api_key=my_api_key, cse_id=my_cse_id, attempts=3,
         res = service.cse().list(q=search_term, cx=cse_id, num=10, **kwargs).execute()
         if 'items' in res:
             full_results = res['items']
-            results = [{'link': result['link'], 'snippet': result['snippet']} for result in full_results]
+            results = [{'link': result['link']} for result in full_results]
             return json.dumps(results)
         else:
             print(f"\nNo search results found. Attempt {attempt + 1} of {attempts}.")

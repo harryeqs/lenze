@@ -23,7 +23,6 @@ def initialize_db():
         CREATE TABLE IF NOT EXISTS sources (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             link TEXT,
-            snippet TEXT,
             text TEXT,
             embedding BLOB
         )
@@ -58,8 +57,8 @@ def local_store(data):
     for entry in data:
         embedding = generate_embedding(entry['text'])
         cursor.execute('''
-            INSERT INTO sources (link, snippet, text, embedding) VALUES (?, ?, ?, ?)
-        ''', (entry['link'], entry['snippet'], entry['text'], embedding))
+            INSERT INTO sources (link, text, embedding) VALUES (?, ?, ?)
+        ''', (entry['link'], entry['text'], embedding))
     
     conn.commit()
     conn.close()
