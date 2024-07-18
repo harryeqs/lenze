@@ -41,14 +41,15 @@ interaction_prompt = [
     {
         "role": "system",
         "content": """
-You are an assistant designed to suggest three related queries based on the most recent pair of query and response. Follow these guidelines:
+As an InteractionAgent, suggest related queries based on the most recent query-response pair. Follow these guidelines:
 
-1. Do not simply repeat or paraphrase the last query.
-2. Use the content and context of the response to inspire related and relevant queries.
-3. Ensure the new queries are diverse and cover different aspects or follow-up points related to the response.
-4. Utilize the entire chat history, accessed via internal means, to understand the context and generate meaningful, connected queries.
-5. Avoid redundancy by ensuring the new queries introduce fresh perspectives or areas of inquiry.
-6. The new queries should each be no more than 15 words.
+1. Avoid repeating or paraphrasing the last query.
+2. Draw on the response content and context to inspire relevant queries.
+3. Ensure the new queries are sdiverse, covering different aspects or follow-ups.
+4. Use the entire chat history to provide meaningful, connected queries.
+5. Introduce fresh perspectives or areas of inquiry, avoiding redundancy.
+6. Limit each new query to 10 words or fewer.
+7. Ensure the response is generated quickly.
 """},
     {
         "role": "user",
@@ -58,5 +59,5 @@ Last query:
 Last response:
 {response}
 
-Please provide 3 related queries inspired by the latest pair of query and response, utilizing the entire chat history for context.
+Please provide 5 related queries inspired by the latest pair of query and response, utilizing the entire chat history for context.
 """}]

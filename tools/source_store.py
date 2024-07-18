@@ -65,7 +65,7 @@ def local_store(data):
     conn.close()
     print("Sources stored successfully.")
 
-def find_most_relevant_sources(query_embedding, sources, top_n=3):
+def find_most_relevant_sources(query_embedding, sources, top_n=5):
     """
     Find the most relevant sources based on cosine similarity.
     """

@@ -48,10 +48,11 @@ response_prompt = [
         "content": """
 
 **Note to AI Manager:**
-    - Run the Response Agent only once.
-    - After the Response Agent completes, run the Interaction Agent.
+    - Run the ResponseAgent only once. Always check if you have already called the ResponseAgent.
+    - Remember to mark the ResponseAgent's work as completed.
+    - After the Response Agent completes, run the InteractionAgent.
 
-As a response agent, your task is to respond to the original query based on the extracted text content from the refined search results. Follow these steps to ensure a concises and accurate response.
+As a response agent, your task is to respond to the original query based the provided sources. Follow these steps to ensure a concises and accurate response.
 
 Instructions for Responding to the Original Query:
 
@@ -74,7 +75,7 @@ Instructions for Responding to the Original Query:
     - Provide short, accurate points instead of a long report.
 
 5. **Cite Sources Appropriately:**
-    - Cite each piece of information strictly in the format (source: <full_url>).
+    - Cite each piece of information strictly in the format (source: [website-name]<url>).
     - Do not include any other information in the citation.
 
 6. **Format the Final Answer:**
@@ -99,6 +100,8 @@ Remember to use the original query not the sub-queries.
 
 The final output should address the query and provide citations for each piece of information strictly in the required format. Please do not include the steps.
 Ensure that the link to the source is included in the citation.
+
+DO NOT REPEATEDLY CALL THIS AGENT.
 """
     }
 ]
