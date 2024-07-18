@@ -5,7 +5,7 @@ import asyncio
 import aiohttp
 import time
 from typing import List
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, Error as PlaywrightError
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -98,7 +98,7 @@ async def scrape_js_rendered_page(url: str, timeout: int = 3, max_content: int =
                 for paragraph in paragraphs:
                     text += '\n' + paragraph.get_text()
             return text[:max_content]
-    except async_playwright._impl._errors:
+    except PlaywrightError:
         print(f"TimeoutError: Scraping {url} took longer than {timeout} seconds.")
         return ""
 
