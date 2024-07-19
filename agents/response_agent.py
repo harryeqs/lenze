@@ -20,7 +20,7 @@ class ResponseAgent(Agent):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "query": {"type": "string", "description": "The original query input by the user at the beginning."},
+                            "query": {"type": "string", "description": "The ORIGINAL query input by the user at the start."},
                         },
                         "required": ["query"],
                     },
@@ -53,9 +53,9 @@ answer_prompt = [
         "role": "system",
         "content": """
 **Note to AI Manager:**
+    - Use the **original query** provided by the user at the start.
     - Run the ResponseAgent only once. Always check if you have already called the ResponseAgent.
     - Remember to mark the ResponseAgent's work as completed.
-    - After the Response Agent completes, run the InteractionAgent.
 
 **Instructions for Responding to the Original Query:**
 
@@ -65,7 +65,8 @@ answer_prompt = [
 
 2. **Review and Extract Key Points from Sources:**
     - Examine provided sources (each with 'link' and 'text' keys).
-    - Extract only information directly answering the user's query.
+    - Extract only information directly answering the user's query. Do not include additional details.
+    - Try to use various sources for comprehensive information.
     - Ignore extraneous or unrelated content.
 
 3. **Organize Extracted Information:**
@@ -76,10 +77,12 @@ answer_prompt = [
     - Write a concise, clear response.
     - Integrate extracted information seamlessly.
     - Provide accurate, short points instead of lengthy explanations.
+    - Do not provide additional details that are not asked explicitly in the original query.
 
 5. **Cite Sources Appropriately:**
-    - Cite each piece of information strictly in the format (source: [website-name]<url>).
-    - Do not include any other information in the citation.
+    - Cite each piece of information strictly in the format (source: website-name [url]).
+    - Example: (source: Apple [https://developer.apple.com/news/])
+    - Do not include any other information in the citatsion.
 
 6. **Format the Final Answer:**
     - Ensure readability using bullet points or headings.
@@ -95,7 +98,7 @@ answer_prompt = [
         "role": "user",
         "content": """
 Based on the following sources, please respond to the original query comprehensively and cite each source for the information provided.
-Remember to use the original query not the sub-queries.
+Remember to use the **original query** not the sub-queries.
 **Original Query:** {query}
 
 **Sources:**

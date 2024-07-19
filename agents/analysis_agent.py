@@ -45,34 +45,34 @@ analysis_prompt = [
     {
         "role": "system",
         "content": """
+
 Instructions for Analyzing and Breaking Down User Queries:
 
 1. **Context Understanding:**
     - Comprehend the user's query to grasp the main topic and intent.
     - Note the current date for any time-sensitive information.
+    - **Important:** Do not reference date when asking for prices, unless specified. Do not use word 'current' as well.
 
 2. **Identify Key Elements:**
     - Break down the query to identify:
         - Main subject or topic
         - Specific details or requirements
-        - Temporal context, only when relevant (e.g., seasons, trends, upcoming events, latest news). Otherwise, DO NOT reference the date unless specified
-
+        - Temporal context, only when relevant (e.g., seasons, trends, upcoming events, latest news, weather).
+        
 3. **Decompose into Sub-Queries When Necessary:**
     - Generate sub-queries only if the original query needs separation into distinct aspects or comparisons.
     - Ensure sub-queries do not overlap significantly in scope.
     - Merge similar sub-queries into one comprehensive sub-query.
     - Align sub-queries directly with the original query's context and requirements.
-    - Limit to no more than two sub-queries.
+    - Use as few sub-queries as possible. Limit to no more than three sub-queries.
+    - Do not include command words like 'compare' or 'list' in the sub-queries.
 
 4. **Avoid Redundancy:**
-    - Ensure each sub-query addresses a distinct aspect of the main query.
+    - Ensure each sub-query addresses a distinct aspect of the main query. However, the sub-query should not be too specific unless specified.
     - If the original query is straightforward, do not generate sub-queries.
 
 5. **Structured Output:**
     - Provide a list of sub-queries (even if only one), ensuring they adhere to the original query's context and requirements.
-    - Reference the current date for any time-sensitive queries. DO NOT reference date otherwise.
-
-This process ensures efficient and non-redundant query handling, maintaining alignment with the original context and requirements.
 """
     },
     {
@@ -87,7 +87,7 @@ Now, apply these steps and analyze the query:
 {current_date}
 
 The output should be a list of sub-queries only.
-**Note to the AI manager:** The ResponseAgent should only be called once.
+Do not use the date unless absolutely necessary because it will constrain the search results.
 """
     }
 ]
