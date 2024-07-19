@@ -134,42 +134,13 @@ async def scrape_urls_async(urls: List[str], concurrency: int = 5) -> List[str]:
 def scrape_urls(urls: List[str], concurrency: int = 10) -> List[str]:
     """
     Wrapper function to run the async scraper with limited concurrency.
+
+    :param urls: List of URLs to scrape text from.
+    :type urls: List[str]
+    :param concurrency: Number of concurrency to run.
+    :type concurrency: int (optional)
+    :return: A list of scraped texts.
+    :rtype: List[str]
     """
     return asyncio.run(scrape_urls_async(urls, concurrency))
 
-
-if __name__ == "__main__":
-    start_time = time.time()
-    urls_01 = [
-        "https://myjapaneseexperience.com/traditional-japanese-food/", 
-        "https://www.reddit.com/r/kansascity/comments/l27sub/good_japanese_food_in_kc/", 
-        "https://resobox.com/news/what-is-typical-japanese-food/", 
-        "https://cooking.stackexchange.com/questions/128587/why-are-there-few-no-traditional-japanese-dishes-made-with-rice-noodles", 
-        "https://www.japan-guide.com/forum/quereadisplay.html?0+77161", 
-        "http://travelhungry.co/blog/2014/5/2/traditional-japanese-at-kicho", 
-        "https://www.japan-guide.com/forum/quereadisplay.html?0+112743", 
-        "https://www.boozefoodtravel.com/in-search-of-japanese-food-in-tokyo/", 
-        "https://www.lisatselebidis.com/natto-what-it-is-why-you-should-eat-it-and-where-to-buy-it/", 
-        "https://www.instagram.com/homecookingsolutions/p/C8Rg8HfPcP7/"
-    ]
-    urls_02 = [
-        "https://www.byfood.com/blog/travel-tips/japanese-traditional-foods",
-        "https://the-shooting-star.com/japan-vegan-vegetarian-survival-guide/",
-        "https://www.legalnomads.com/gluten-free/japan/",
-        "https://www.bbcgoodfood.com/travel/global/top-10-foods-try-japan",
-        "https://www.afar.com/magazine/traditional-japanese-food",
-        "https://champagneflight.com/ultimate-vegetarian-vegan-survival-guide-to-japan/",
-        "https://boutiquejapan.com/food-in-fukuoka/",
-        "https://www.alldayieat.com/recipe/moyashi-goma-ae-mung-bean-sprouts-sweet-sesame-soy/",
-        "https://kuzefukuandsons.com/products/enoki-mushrooms-in-savory-umami-sauce",
-        "https://kobesteakhouse.com/popular-japanese-food-10-mouth-watering-dishes-to-try/"
-    ]
-    urls_03 = [
-        "https://www.uefa.com/uefachampionsleague/fixtures-results/#/d/2024-07-17", 
-        "https://olympics.com/en/sports/", 
-        "https://arxiv.org/pdf/2304.08485"
-    ]
-    scraped_texts = scrape_urls(urls_01+urls_02+urls_03)
-    end_time = time.time()
-    time_taken = f"Scraping took {end_time - start_time:.4f} seconds"
-    print(time_taken)
