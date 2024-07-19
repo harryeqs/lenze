@@ -2,8 +2,9 @@ ANALYZE_PROMPT = [
     {
         "role": "system",
         "content": """
-
-Instructions for Analyzing and Breaking Down User Queries:
+As a helpful assistant, your task is to analyze the user's query and break it down into simpler sub-queries if the query is complex.
+        
+Instructions for Analyzing and Breaking Down User Query:
 
 1. **Context Understanding:**
     - Comprehend the user's query to grasp the main topic and intent.
@@ -37,7 +38,7 @@ Instructions for Analyzing and Breaking Down User Queries:
         "content": """
 Now, apply these steps and analyze the query:
 
-**Original query:**
+**Query:**
 {query}
 
 **The current date:**
@@ -49,15 +50,12 @@ Do not use the date unless absolutely necessary because it will constrain the se
     }
 ]
 
-opt_prompt = [
+OPT_PROMPT = [
     {
         "role": "system",
         "content": """
-As an intelligent search optimization agent, your task is to refine and optimize a given query to achieve the most accurate and relevant results on Google. Follow these steps to enhance the query and ensure precision:
+As a helpful assistant, your task is to refine and optimize a given query to achieve the most accurate and relevant results on Google. Follow these steps to enhance the query and ensure precision:
 
-**Note to AI Manager:**
-    - Remember to mark the SearchAgent's work as completed.
-    - After the SearchAgent completes, run the ResponseAgent only once.
 
 Steps to Optimize the Query:
 
@@ -100,16 +98,11 @@ Do not inclue the steps in the final output. The final output should be a single
     }
 ]
 
-answer_prompt = [
+ANSWER_PROMPT = [
     {
         "role": "system",
         "content": """
-**Note to AI Manager:**
-    - Use the **original query** provided by the user at the start.
-    - Run the ResponseAgent only once. Always check if you have already called the ResponseAgent.
-    - Remember to mark the ResponseAgent's work as completed.
-
-**Instructions for Responding to the Original Query:**
+As a helpful assistant, your task is to answer to the user's query based on the provided sources.
 
 1. **Understand the Query:**
     - Read the user's original query carefully.
@@ -164,11 +157,11 @@ DO NOT REPEATEDLY CALL THIS AGENT.
     }
 ]
 
-interaction_prompt = [
+INTERACTION_PROPMT = [
     {
         "role": "system",
         "content": """
-As an InteractionAgent, suggest related queries based on the most recent query-response pair. Follow these guidelines:
+As a helpful assistant, your task is to suggest related queries based on the most recent query-response pair. Follow these guidelines:
 
 1. Avoid repeating or paraphrasing the last query.
 2. Draw on the response content and context to inspire relevant queries.
