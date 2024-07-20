@@ -23,7 +23,6 @@ Instructions for Analyzing and Breaking Down User Query:
     - Merge similar sub-queries into one comprehensive sub-query.
     - Align sub-queries directly with the original query's context and requirements.
     - Use as few sub-queries as possible. Limit to no more than three sub-queries.
-    - Do not include command words like 'compare' or 'list' in the sub-queries.
 
 4. **Avoid Redundancy:**
     - Ensure each sub-query addresses a distinct aspect of the main query. However, the sub-query should not be too specific unless specified.
@@ -31,6 +30,7 @@ Instructions for Analyzing and Breaking Down User Query:
 
 5. **Structured Output:**
     - Provide a list of sub-queries (even if only one), ensuring they adhere to the original query's context and requirements.
+    - The queries should only be a list in the format ['sub-query 1', 'sub-query']
 """
     },
     {
