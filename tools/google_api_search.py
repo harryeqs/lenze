@@ -8,7 +8,7 @@ load_dotenv()
 my_api_key = os.getenv('GOOGLE_API_KEY')
 my_cse_id = os.getenv('CSE_ID')
 
-def google_search(search_term, api_key=my_api_key, cse_id=my_cse_id, attempts=3, **kwargs):
+def google_api_search(search_term, api_key=my_api_key, cse_id=my_cse_id, attempts=3, **kwargs):
     """ 
     Conduct a Google search on a given search term.
 
@@ -57,6 +57,6 @@ if __name__ == "__main__":
         'lr': 'lang_en'
 
     }
-    results = google_search('apple vision pro price china', **kwargs)
+    results = google_api_search('apple vision pro price china', **kwargs)
     print(results)
     print (len(results))

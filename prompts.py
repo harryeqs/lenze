@@ -30,7 +30,7 @@ Instructions for Analyzing and Breaking Down User Query:
 
 5. **Structured Output:**
     - Provide a list of sub-queries (even if only one), ensuring they adhere to the original query's context and requirements.
-    - The queries should only be a list in the format ['sub-query 1', 'sub-query']
+    - The queries should strictly only be a list in the format ['sub-query 1', 'sub-query 2']
 """
     },
     {

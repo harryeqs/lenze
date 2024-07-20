@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
-import requests, json
+import requests, json, random
 
-def google(query: str, num: int = 10):
+def google_search(query: str, num: int = 20):
     """
     Conduct a google search on a given query.
     
@@ -15,15 +15,26 @@ def google(query: str, num: int = 10):
     # https://docs.python-requests.org/en/master/user/quickstart/#passing-parameters-in-urls
     params = {
         "q": query, # query example
-        "hl": "en",          # language
-        "gl": "uk",          # country of the search, UK -> United Kingdom
+        "hl": "",          # language
+        "gl": "",          # country of the search, UK -> United Kingdom
         "start": 0,          # number page by default up to 0         # parameter defines the maximum number of results to return.
     }
 
     # https://docs.python-requests.org/en/master/user/quickstart/#custom-headers
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
-    }
+    user_agent_list = [
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:77.0) Gecko/20100101 Firefox/77.0',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
+    ]
+
+    for _ in user_agent_list:
+        #Pick a random user agent
+        user_agent = random.choice(user_agent_list)
+
+        #Set the headers 
+        headers = {'User-Agent': user_agent}
 
     results = []
 
@@ -54,3 +65,6 @@ def get_urls(results):
     return urls
 
 
+if __name__ == '__main__':
+    results = google_search('why is the sky blue')
+    print(results)

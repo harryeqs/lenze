@@ -1,5 +1,6 @@
 from openai import OpenAI
-from tools.google_search import google, get_urls
+from tools.google_scrape_search import google_search, get_urls
+from tools.google_api_search import google_api_search
 from tools.source_store import local_store, local_read, initialize_db
 from tools.web_scraper import scrape_urls
 from datetime import date, datetime
@@ -8,6 +9,7 @@ import os
 import time
 import json
 import logging
+import ast
 
 __all__ = ["Lenze"]
 
@@ -47,7 +49,7 @@ class Lenze:
         handler = logging.FileHandler(log_filename)
         handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         self.logger.addHandler(handler)
-        self.logger.info('Lenze set up complete, ready to run')
+        self.logger.info('Lenze setup completed, ready to run')
     
     def __get_response(self, messages: dict, max_token: int = 100):
         start_time = time.time()
@@ -57,7 +59,7 @@ class Lenze:
         max_tokens=max_token
     )
         end_time = time.time()
-        self.logger.info(f"API call took {end_time - start_time} seconds")
+        self.logger.info(f'API call took {end_time - start_time:.4f} seconds')
         return response.choices[0].message.content
 
     def analyze(self, query: str):
@@ -70,10 +72,34 @@ class Lenze:
         sub_queries = self.__get_response(prompt)
         self.logger.info('Completed analysis for query: %s', query)
 
-        return sub_queries
+        return ast.literal_eval(sub_queries)
   
     def search(self, sub_queries: list):
-        pass
+
+        urls = []
+        sources = []
+
+        start_time = time.time()
+        self.logger.info('Start searching for each sub-query')
+        
+        for sub_query in sub_queries:
+            values = {'sub_query': sub_query}
+            prompt = complete_prompt(OPT_PROMPT, values)
+            opt_query = self.__get_response(prompt)
+            self.logger.info(f'Optimized query for sub-query {sub_query} generated: {opt_query}')            
+            new_urls = get_urls(google_api_search(opt_query))
+            urls.extend(new_urls)
+
+        urls = list(set(urls))
+        scraped_texts = scrape_urls(urls)
+        for url, text in zip(urls, scraped_texts):
+            sources.append({'link': url, 'text': text})
+
+        local_store(sources)
+        self.logger.info('Search')
+
+        end_time = time.time()
+        self.logger.info(f'Finished searching for each sub-query and sources have been stored locally. Actions took {end_time-start_time:.4f}')
 
     def answer(self, query: str):
         pass
