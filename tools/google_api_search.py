@@ -35,7 +35,7 @@ def google_api_search(search_term, api_key=my_api_key, cse_id=my_cse_id, attempt
                 hl=kwargs.get('hl', ''),             # Interface language
                 siteSearch=kwargs.get('siteSearch', '')  # Site restriction
             )
-            print(f"\nRequest parameters: {request.uri}")  # Debug: log the request parameters
+            # print(f"\nRequest parameters: {request.uri}")  # Debug: log the request parameters
             res = request.execute()
             if 'items' in res:
                 full_results = res['items']

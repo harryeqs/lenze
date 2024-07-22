@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import requests, json, random
 
-def google_search(query: str, num: int = 20):
+def google_scrape_search(query: str, num: int = 10):
     """
     Conduct a google search on a given query.
     
@@ -30,7 +30,7 @@ def google_search(query: str, num: int = 20):
     ]
 
     for _ in user_agent_list:
-        #Pick a random user agent
+        #Pick a random user agents
         user_agent = random.choice(user_agent_list)
 
         #Set the headers 

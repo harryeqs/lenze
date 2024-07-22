@@ -11,7 +11,7 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
 
-async def fetch_content(session, url: str, timeout: int = 3) -> str:
+async def fetch_content(session, url: str, timeout: int = 2) -> str:
     """
     Fetches content from a URL using aiohttp.
     """
@@ -118,7 +118,7 @@ async def scrape_url_async(url: str) -> str:
                 return await scrape_js_rendered_page(url)
     return ""
 
-async def scrape_urls_async(urls: List[str], concurrency: int = 5) -> List[str]:
+async def scrape_urls_async(urls: List[str], concurrency: int = 10) -> List[str]:
     """
     Scrapes text content from a list of URLs asynchronously with limited concurrency.
     """

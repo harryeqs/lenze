@@ -1,13 +1,13 @@
 from openai import OpenAI
-from tools.google_scrape_search import google_search, get_urls
+from tools.google_scrape_search import google_scrape_search, get_urls
 from tools.google_api_search import google_api_search
-from tools.source_store import local_store, local_read, initialize_db
+from tools.source_store import local_store, local_read, initialize_db, generate_embedding, find_most_relevant_sources
 from tools.web_scraper import scrape_urls
 from datetime import date, datetime
 from prompts import ANALYZE_PROMPT, OPT_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
+import numpy as np
 import os
 import time
-import json
 import logging
 import ast
 
@@ -34,9 +34,11 @@ def complete_prompt(template, values):
 
 class Lenze:
     def __init__(self, client: OpenAI, model: str, mode: str="default"):
+
         initialize_db()
         self.client = client
         self.model = model
+        self.search_history = []
         
         # Set up logging
         current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -49,9 +51,9 @@ class Lenze:
         handler = logging.FileHandler(log_filename)
         handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         self.logger.addHandler(handler)
-        self.logger.info('Lenze setup completed, ready to run')
+        self.logger.info('**Lenze setup completed, ready to run**s')
     
-    def __get_response(self, messages: dict, max_token: int = 100):
+    def __get_response(self, messages: dict, max_token: int = 600):
         start_time = time.time()
         response = self.client.chat.completions.create(
         model=self.model,
@@ -62,19 +64,19 @@ class Lenze:
         self.logger.info(f'API call took {end_time - start_time:.4f} seconds')
         return response.choices[0].message.content
 
-    def analyze(self, query: str):
-
+    def analyze(self):
+        
         current_date = date.today()
-        values = {'query': query, 'current_date': current_date}
+        values = {'query': self.query, 'current_date': current_date}
         prompt = complete_prompt(ANALYZE_PROMPT, values)
 
-        self.logger.info('Starting analysis for query: %s', query)
+        self.logger.info('Starting analysis for query: <%s>', self.query)
         sub_queries = self.__get_response(prompt)
-        self.logger.info('Completed analysis for query: %s', query)
+        self.logger.info('Completed analysis for query: <%s>', self.query)
 
-        return ast.literal_eval(sub_queries)
+        self.sub_queries = ast.literal_eval(sub_queries)
   
-    def search(self, sub_queries: list):
+    def search(self):
 
         urls = []
         sources = []
@@ -82,12 +84,13 @@ class Lenze:
         start_time = time.time()
         self.logger.info('Start searching for each sub-query')
         
-        for sub_query in sub_queries:
+        for sub_query in self.sub_queries:
             values = {'sub_query': sub_query}
             prompt = complete_prompt(OPT_PROMPT, values)
             opt_query = self.__get_response(prompt)
-            self.logger.info(f'Optimized query for sub-query {sub_query} generated: {opt_query}')            
-            new_urls = get_urls(google_api_search(opt_query))
+            self.logger.info(f'Optimized query for sub-query <{sub_query}> generated: <{opt_query}>')            
+            # new_urls = get_urls(google_api_search(opt_query))
+            new_urls = get_urls(google_scrape_search(opt_query))
             urls.extend(new_urls)
 
         urls = list(set(urls))
@@ -96,16 +99,56 @@ class Lenze:
             sources.append({'link': url, 'text': text})
 
         local_store(sources)
-        self.logger.info('Search')
 
         end_time = time.time()
-        self.logger.info(f'Finished searching for each sub-query and sources have been stored locally. Actions took {end_time-start_time:.4f}')
+        self.logger.info(f'Finished searching for each sub-query and sources have been stored locally. Actions took {end_time-start_time:.4f} seconds')
 
-    def answer(self, query: str):
-        pass
+    def answer(self):
+        start_time = time.time()
+        self.logger.info('Start analyzing sources and generating response')
 
-    def interact(self, query: str, response: str):
-        pass
+        query_embedding = generate_embedding(self.query)
+        sources = local_read()
+        most_relevant_sources = find_most_relevant_sources(np.frombuffer(query_embedding, dtype=np.float32), sources)
+        values = {'sources': most_relevant_sources, 'query': self.query}
+        prompt = complete_prompt(ANSWER_PROMPT, values)
+        response = self.__get_response(prompt)
+        self.response = response
 
-    def run(self, query: str):
-        pass
+        output = f'\n=========Answer==========\n{response}'
+        self.logger.info(output)
+        print(output)
+
+        end_time = time.time()
+        self.logger.info(f'Response generated successfully in {end_time-start_time:.4f} seconds')
+
+    def interact(self):
+        start_time = time.time()
+        self.logger.info('Start generating related queries')
+        values = {'query': self.query, 'response': self.response}
+        prompt = complete_prompt(INTERACTION_PROPMT, values)
+        related_queries = self.__get_response(prompt)
+        output = f'\n==========Related==========\n{related_queries}'
+        self.logger.info(output)
+        print(output)
+
+        end_time = time.time()
+        self.logger.info(f'Related queries generated in {end_time-start_time:.4f} seconds')
+
+    def run(self):
+        while True:
+            try:
+                self.query = input("Enter a new query (or press Ctrl+C to exit): ")
+                start_time = time.time()
+                self.analyze()
+                self.search()
+                self.answer()
+                self.interact()
+                end_time = time.time()
+                time_taken = f'**Response generated in {end_time-start_time:.4f} seconds**'
+                self.logger.info(time_taken)
+                print(time_taken)
+            except KeyboardInterrupt:
+                print("\nKeyboardInterrupt received. Exiting the program.")
+                break
+
