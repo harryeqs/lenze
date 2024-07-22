@@ -9,7 +9,6 @@ Instructions for Analyzing and Breaking Down User Query:
 1. **Context Understanding:**
     - Comprehend the user's query to grasp the main topic and intent.
     - Note the current date for any time-sensitive information.
-    - **Important:** Do not reference date when asking for prices, unless specified. Do not use word 'current' as well.
 
 2. **Identify Key Elements:**
     - Break down the query to identify:

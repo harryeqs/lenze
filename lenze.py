@@ -1,6 +1,5 @@
 from openai import OpenAI
-from tools.google_scrape_search import google_scrape_search, get_urls
-from tools.google_api_search import google_api_search
+from tools.google_search import google_api_search, google_scrape_search, get_urls
 from tools.source_store import local_store, local_read, initialize_db, generate_embedding, find_most_relevant_sources
 from tools.web_scraper import scrape_urls
 from datetime import date, datetime
@@ -51,7 +50,7 @@ class Lenze:
         handler = logging.FileHandler(log_filename)
         handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         self.logger.addHandler(handler)
-        self.logger.info('**Lenze setup completed, ready to run**s')
+        self.logger.info('**Lenze setup completed, ready to run**')
     
     def __get_response(self, messages: dict, max_token: int = 600):
         start_time = time.time()
@@ -69,12 +68,9 @@ class Lenze:
         current_date = date.today()
         values = {'query': self.query, 'current_date': current_date}
         prompt = complete_prompt(ANALYZE_PROMPT, values)
-
-        self.logger.info('Starting analysis for query: <%s>', self.query)
         sub_queries = self.__get_response(prompt)
-        self.logger.info('Completed analysis for query: <%s>', self.query)
-
         self.sub_queries = ast.literal_eval(sub_queries)
+        self.logger.info(f"Sub-queries for query <{self.query}> generated: <{self.sub_queries}>")
   
     def search(self):
 
@@ -120,7 +116,7 @@ class Lenze:
         print(output)
 
         end_time = time.time()
-        self.logger.info(f'Response generated successfully in {end_time-start_time:.4f} seconds')
+        self.logger.info(f'Answer generated successfully in {end_time-start_time:.4f} seconds')
 
     def interact(self):
         start_time = time.time()
@@ -136,9 +132,13 @@ class Lenze:
         self.logger.info(f'Related queries generated in {end_time-start_time:.4f} seconds')
 
     def run(self):
+        print("======Welcome from Lenze======")
+        global_start = time.time()
         while True:
             try:
                 self.query = input("Enter a new query (or press Ctrl+C to exit): ")
+                self.logger.info(f'New query received: <{self.query}>')
+                print(f'\n=====Query=====\n{self.query}')
                 start_time = time.time()
                 self.analyze()
                 self.search()
@@ -147,8 +147,10 @@ class Lenze:
                 end_time = time.time()
                 time_taken = f'**Response generated in {end_time-start_time:.4f} seconds**'
                 self.logger.info(time_taken)
-                print(time_taken)
+                print(f'\n{time_taken}\n')
             except KeyboardInterrupt:
-                print("\nKeyboardInterrupt received. Exiting the program.")
+                print("\nKeyboardInterrupt received. Exiting Lenze.")
                 break
 
+        global_end = time.time()
+        self.logger.info(f'**Lenze ran for {global_end-global_start:.4f} seconds, exiting.**')

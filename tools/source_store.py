@@ -62,7 +62,7 @@ def local_store(data):
     
     conn.commit()
     conn.close()
-    print("Sources stored successfully.")
+    # print("Sources stored successfully.")
 
 def find_most_relevant_sources(query_embedding, sources, top_n=10):
     """
