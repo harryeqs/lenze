@@ -1,27 +1,28 @@
-from bs4 import BeautifulSoup
-import fitz
-from io import BytesIO
-import asyncio
 import aiohttp
+import asyncio
+from bs4 import BeautifulSoup
+from io import BytesIO
+import fitz
 import time
+from playwright.async_api import async_playwright, Error as PlaywrightError, TimeoutError as PlaywrightTimeoutError
 from typing import List
-from playwright.async_api import async_playwright, Error as PlaywrightError
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
 
-async def fetch_content(session, url: str, timeout: int = 2) -> str:
+async def fetch_content(session, url: str, timeout: float = 1) -> str:
     """
     Fetches content from a URL using aiohttp.
     """
     try:
         async with session.get(url, timeout=timeout, headers=HEADERS) as response:
-            if response.status != 200:
-                raise aiohttp.ClientError(f"Failed to fetch {url}, status code: {response.status}")
-            content = await response.text()
-            return content
-    except (aiohttp.ClientError or asyncio.TimeoutError) as e:
+            if response.status == 200:
+                return await response.text()
+            else:
+                print(f"ClientError: Failed to fetch {url}, status code: {response.status}")
+                return ""
+    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         print(f"ClientError: Unable to access URL: {url}. Reason: {e}")
         return ""
 
@@ -33,19 +34,17 @@ async def scrape_html_content(session, url: str, max_content: int = 5000) -> str
     if not html_content:
         return ""
 
-    soup = BeautifulSoup(html_content, "html.parser")
+    soup = BeautifulSoup(html_content, "lxml")
     main_content = soup.find('main') or soup.find('article') or soup.body
-    
+
     text = ""
     if main_content:
         title = soup.find('title').get_text() if soup.find('title') else ""
         paragraphs = main_content.find_all('p')
-        text = title
-        for paragraph in paragraphs:
-            text += '\n' + paragraph.get_text()
+        text = title + '\n' + '\n'.join(p.get_text() for p in paragraphs)
     return text[:max_content]
 
-async def scrape_pdf_async(url: str, timeout: int = 3, max_content: int = 5000) -> str:
+async def scrape_pdf_async(url: str, timeout: float = 2, max_content: int = 5000) -> str:
     """
     Scrapes text content from a PDF page asynchronously.
     """
@@ -54,8 +53,7 @@ async def scrape_pdf_async(url: str, timeout: int = 3, max_content: int = 5000) 
             async with session.get(url, timeout=timeout) as response:
                 if response.status != 200:
                     raise aiohttp.ClientError(f"Failed to fetch {url}, status code: {response.status}")
-                content_type = response.headers.get('Content-Type')
-                if content_type != 'application/pdf':
+                if response.headers.get('Content-Type') != 'application/pdf':
                     raise ValueError("The URL does not point to a PDF file.")
                 
                 remote_file = await response.read()
@@ -68,12 +66,11 @@ async def scrape_pdf_async(url: str, timeout: int = 3, max_content: int = 5000) 
                     text += page.get_text()
 
                 return text[:max_content]
-    except (aiohttp.ClientError or asyncio.TimeoutError) as e:
-        print(f"ClientError: Unable to access URL: {url}. Reason: {e}.") 
+    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        print(f"ClientError: Unable to access URL: {url}. Reason: {e}.")
+        return ""
 
-    return ""
-
-async def scrape_js_rendered_page(url: str, timeout: int = 3, max_content: int = 5000) -> str:
+async def scrape_js_rendered_page(url: str, timeout: float = 1.5, max_content: int = 5000) -> str:
     """
     Scrapes text content from a JavaScript-rendered page using Playwright.
     """
@@ -87,19 +84,17 @@ async def scrape_js_rendered_page(url: str, timeout: int = 3, max_content: int =
             content = await page.content()
             await browser.close()
 
-            soup = BeautifulSoup(content, 'html.parser')
+            soup = BeautifulSoup(content, 'lxml')
             main_content = soup.find('main') or soup.find('article') or soup.body
 
             text = ""
             if main_content:
                 title = soup.find('title').get_text() if soup.find('title') else ""
                 paragraphs = main_content.find_all('p')
-                text = title
-                for paragraph in paragraphs:
-                    text += '\n' + paragraph.get_text()
+                text = title + '\n' + '\n'.join(p.get_text() for p in paragraphs)
             return text[:max_content]
-    except PlaywrightError:
-        print(f"TimeoutError: Scraping {url} took longer than {timeout} seconds.")
+    except (PlaywrightError, PlaywrightTimeoutError) as e:
+        print(f"PlaywrightError: Scraping {url} failed. Reason: {e}")
         return ""
 
 async def scrape_url_async(url: str) -> str:
@@ -111,12 +106,14 @@ async def scrape_url_async(url: str) -> str:
     else:
         async with aiohttp.ClientSession() as session:
             try:
-                return await scrape_html_content(session, url)
+                content = await scrape_html_content(session, url)
+                if content:
+                    return content
             except Exception as e:
-                print(f"Exception: Unable to access URL: {url}. Exception: {e}")
-                print("Falling back to Playwright for JavaScript-rendered page.")
-                return await scrape_js_rendered_page(url)
-    return ""
+                print(f"Exception: Unable to access URL: {url} using aiohttp. Exception: {e}")
+
+        print(f"Falling back to Playwright for JavaScript-rendered page: {url}")
+        return await scrape_js_rendered_page(url)
 
 async def scrape_urls_async(urls: List[str], concurrency: int = 10) -> List[str]:
     """
@@ -134,13 +131,43 @@ async def scrape_urls_async(urls: List[str], concurrency: int = 10) -> List[str]
 def scrape_urls(urls: List[str], concurrency: int = 10) -> List[str]:
     """
     Wrapper function to run the async scraper with limited concurrency.
-
-    :param urls: List of URLs to scrape text from.
-    :type urls: List[str]
-    :param concurrency: Number of concurrency to run.
-    :type concurrency: int (optional)
-    :return: A list of scraped texts.
-    :rtype: List[str]
     """
     return asyncio.run(scrape_urls_async(urls, concurrency))
 
+if __name__ == "__main__":
+    start_time = time.time()
+    urls_01 = [
+        "https://myjapaneseexperience.com/traditional-japanese-food/", 
+        "https://www.reddit.com/r/kansascity/comments/l27sub/good_japanese_food_in_kc/", 
+        "https://resobox.com/news/what-is-typical-japanese-food/", 
+        "https://cooking.stackexchange.com/questions/128587/why-are-there-few-no-traditional-japanese-dishes-made-with-rice-noodles", 
+        "https://www.japan-guide.com/forum/quereadisplay.html?0+77161", 
+        "http://travelhungry.co/blog/2014/5/2/traditional-japanese-at-kicho", 
+        "https://www.japan-guide.com/forum/quereadisplay.html?0+112743", 
+        "https://www.boozefoodtravel.com/in-search-of-japanese-food-in-tokyo/", 
+        "https://www.lisatselebidis.com/natto-what-it-is-why-you-should-eat-it-and-where-to-buy-it/", 
+        "https://www.instagram.com/homecookingsolutions/p/C8Rg8HfPcP7/"
+    ]
+    urls_02 = [
+        "https://www.byfood.com/blog/travel-tips/japanese-traditional-foods",
+        "https://the-shooting-star.com/japan-vegan-vegetarian-survival-guide/",
+        "https://www.legalnomads.com/gluten-free/japan/",
+        "https://www.bbcgoodfood.com/travel/global/top-10-foods-try-japan",
+        "https://www.afar.com/magazine/traditional-japanese-food",
+        "https://champagneflight.com/ultimate-vegetarian-vegan-survival-guide-to-japan/",
+        "https://boutiquejapan.com/food-in-fukuoka/",
+        "https://www.alldayieat.com/recipe/moyashi-goma-ae-mung-bean-sprouts-sweet-sesame-soy/",
+        "https://kuzefukuandsons.com/products/enoki-mushrooms-in-savory-umami-sauce",
+        "https://kobesteakhouse.com/popular-japanese-food-10-mouth-watering-dishes-to-try/"
+    ]
+    urls_03 = [
+        "https://www.uefa.com/uefachampionsleague/fixtures-results/#/d/2024-07-17",
+        "https://www.japan-guide.com/forum/quereadisplay.html?0+77161",
+        "https://olympics.com/en/sports/", 
+        "https://arxiv.org/pdf/2304.08485"
+    ]
+    scraped_texts = scrape_urls(urls_03)
+    end_time = time.time()
+    print(scraped_texts[0])
+    time_taken = f"Scraping took {end_time - start_time:.4f} seconds"
+    print(time_taken)

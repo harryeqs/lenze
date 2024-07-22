@@ -68,13 +68,12 @@ def get_urls(results):
     urls = [result['link'] for result in results]
     return urls
 
-
 # Load the environment variables from the .env file
 load_dotenv()
 my_api_key = os.getenv('GOOGLE_API_KEY')
 my_cse_id = os.getenv('CSE_ID')
 
-def google_api_search(search_term, api_key=my_api_key, cse_id=my_cse_id, attempts=3, **kwargs):
+def google_api_search(search_term, api_key=my_api_key, cse_id=my_cse_id, attempts=1, **kwargs):
     """ 
     Conduct a Google search on a given search term.
 

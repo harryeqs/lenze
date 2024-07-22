@@ -3,7 +3,7 @@ from tools.google_search import google_api_search, google_scrape_search, get_url
 from tools.source_store import local_store, local_read, initialize_db, generate_embedding, find_most_relevant_sources
 from tools.web_scraper import scrape_urls
 from datetime import date, datetime
-from prompts import ANALYZE_PROMPT, OPT_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
+from prompts import CHECK_SEARCH_PROMPT, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 import numpy as np
 import os
 import time
@@ -31,8 +31,16 @@ def complete_prompt(template, values):
 
     return filled_template
 
+def str_to_bool(s):
+    if s.lower() in ['true', '1', 't', 'y', 'yes']:
+        return True
+    elif s.lower() in ['false', '0', 'f', 'n', 'no']:
+        return False
+    else:
+        raise ValueError(f"Cannot convert {s} to boolean.")
+
 class Lenze:
-    def __init__(self, client: OpenAI, model: str, mode: str="default"):
+    def __init__(self, client: OpenAI, model: str):
 
         initialize_db()
         self.client = client
@@ -52,7 +60,7 @@ class Lenze:
         self.logger.addHandler(handler)
         self.logger.info('**Lenze setup completed, ready to run**')
     
-    def __get_response(self, messages: dict, max_token: int = 600):
+    def __get_response(self, messages: dict, max_token: int = 1000):
         start_time = time.time()
         response = self.client.chat.completions.create(
         model=self.model,
@@ -62,11 +70,20 @@ class Lenze:
         end_time = time.time()
         self.logger.info(f'API call took {end_time - start_time:.4f} seconds')
         return response.choices[0].message.content
+    
+    def need_search(self):
+
+        values = {'search_history': self.search_history, 'query': self.query}
+        prompt = complete_prompt(CHECK_SEARCH_PROMPT, values)
+        response = self.__get_response(prompt)
+        need_search = str_to_bool(response.strip())  # Convert the string response to a boolean
+        self.logger.info(f"Additional sources needed for query <{self.query}>: <{need_search}>")
+        return need_search
 
     def analyze(self):
         
         current_date = date.today()
-        values = {'query': self.query, 'current_date': current_date}
+        values = {'query': self.query, 'current_date': current_date, 'search_history': self.search_history}
         prompt = complete_prompt(ANALYZE_PROMPT, values)
         sub_queries = self.__get_response(prompt)
         self.sub_queries = ast.literal_eval(sub_queries)
@@ -81,12 +98,9 @@ class Lenze:
         self.logger.info('Start searching for each sub-query')
         
         for sub_query in self.sub_queries:
-            values = {'sub_query': sub_query}
-            prompt = complete_prompt(OPT_PROMPT, values)
-            opt_query = self.__get_response(prompt)
-            self.logger.info(f'Optimized query for sub-query <{sub_query}> generated: <{opt_query}>')            
+            values = {'sub_query': sub_query}  
             # new_urls = get_urls(google_api_search(opt_query))
-            new_urls = get_urls(google_scrape_search(opt_query))
+            new_urls = get_urls(google_scrape_search(sub_query))
             urls.extend(new_urls)
 
         urls = list(set(urls))
@@ -100,6 +114,7 @@ class Lenze:
         self.logger.info(f'Finished searching for each sub-query and sources have been stored locally. Actions took {end_time-start_time:.4f} seconds')
 
     def answer(self):
+
         start_time = time.time()
         self.logger.info('Start analyzing sources and generating response')
 
@@ -118,7 +133,10 @@ class Lenze:
         end_time = time.time()
         self.logger.info(f'Answer generated successfully in {end_time-start_time:.4f} seconds')
 
+        self.search_history.append({'query:': self.query, 'response': self.response})
+
     def interact(self):
+
         start_time = time.time()
         self.logger.info('Start generating related queries')
         values = {'query': self.query, 'response': self.response}
@@ -132,16 +150,21 @@ class Lenze:
         self.logger.info(f'Related queries generated in {end_time-start_time:.4f} seconds')
 
     def run(self):
-        print("======Welcome from Lenze======")
+
+        print("======Welcome! I'm Lenze and I will help with your queries======")
         global_start = time.time()
+
         while True:
             try:
                 self.query = input("Enter a new query (or press Ctrl+C to exit): ")
                 self.logger.info(f'New query received: <{self.query}>')
                 print(f'\n=====Query=====\n{self.query}')
                 start_time = time.time()
-                self.analyze()
-                self.search()
+                
+                if self.need_search():
+                    self.analyze()
+                    self.search()
+
                 self.answer()
                 self.interact()
                 end_time = time.time()
@@ -151,6 +174,10 @@ class Lenze:
             except KeyboardInterrupt:
                 print("\nKeyboardInterrupt received. Exiting Lenze.")
                 break
-
+            except Exception as e:
+                self.logger.error(f'An error occurred: {str(e)}')
+                break
+        
         global_end = time.time()
         self.logger.info(f'**Lenze ran for {global_end-global_start:.4f} seconds, exiting.**')
+            

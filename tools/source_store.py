@@ -1,12 +1,16 @@
 import sqlite3
 import os
 import numpy as np
+from dotenv import load_dotenv
+import openai
 from transformers import BertTokenizer, BertModel
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
 import time
 
 DB_PATH = 'data/sources.db'
+load_dotenv()
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Initialize BERT model and tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -39,12 +43,12 @@ def generate_embedding(text):
     Generate a BERT embedding for the given text.
     """
     start_time = time.time()
-    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512).to(device)
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=128).to(device)
     with torch.no_grad():
         outputs = model(**inputs)
     embedding = outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
     end_time = time.time()
-    # print(f"Embedding generation took {end_time - start_time:.4f} seconds")
+    print(f"Embedding generation took {end_time - start_time:.4f} seconds")
     return embedding.tobytes()
 
 def local_store(data):
