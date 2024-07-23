@@ -7,6 +7,7 @@ from transformers import BertTokenizer, BertModel
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
 import time
+import asyncio
 
 DB_PATH = 'data/sources.db'
 load_dotenv()
@@ -48,7 +49,7 @@ def generate_embedding(text):
         outputs = model(**inputs)
     embedding = outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
     end_time = time.time()
-    print(f"Embedding generation took {end_time - start_time:.4f} seconds")
+    #print(f"Embedding generation took {end_time - start_time:.4f} seconds")
     return embedding.tobytes()
 
 def local_store(data):
@@ -68,7 +69,7 @@ def local_store(data):
     conn.close()
     # print("Sources stored successfully.")
 
-def find_most_relevant_sources(query_embedding, sources, top_n=10):
+def find_most_relevant_sources(query_embedding, sources, top_n=5):
     """
     Find the most relevant sources based on cosine similarity.
     """

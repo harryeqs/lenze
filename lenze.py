@@ -3,12 +3,12 @@ from tools.google_search import google_api_search, google_scrape_search, get_url
 from tools.source_store import local_store, local_read, initialize_db, generate_embedding, find_most_relevant_sources
 from tools.web_scraper import scrape_urls
 from datetime import date, datetime
-from prompts import CHECK_SEARCH_PROMPT, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
+from prompts import ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 import numpy as np
 import os
 import time
 import logging
-import ast
+import json
 
 __all__ = ["Lenze"]
 
@@ -30,14 +30,6 @@ def complete_prompt(template, values):
         filled_template.append({"role": part["role"], "content": filled_content})
 
     return filled_template
-
-def str_to_bool(s):
-    if s.lower() in ['true', '1', 't', 'y', 'yes']:
-        return True
-    elif s.lower() in ['false', '0', 'f', 'n', 'no']:
-        return False
-    else:
-        raise ValueError(f"Cannot convert {s} to boolean.")
 
 class Lenze:
     def __init__(self, client: OpenAI, model: str):
@@ -70,26 +62,20 @@ class Lenze:
         end_time = time.time()
         self.logger.info(f'API call took {end_time - start_time:.4f} seconds')
         return response.choices[0].message.content
-    
-    def need_search(self):
-
-        values = {'search_history': self.search_history, 'query': self.query}
-        prompt = complete_prompt(CHECK_SEARCH_PROMPT, values)
-        response = self.__get_response(prompt)
-        need_search = str_to_bool(response.strip())  # Convert the string response to a boolean
-        self.logger.info(f"Additional sources needed for query <{self.query}>: <{need_search}>")
-        return need_search
 
     def analyze(self):
         
+        self.logger.info("Analysis start")
         current_date = date.today()
         values = {'query': self.query, 'current_date': current_date, 'search_history': self.search_history}
         prompt = complete_prompt(ANALYZE_PROMPT, values)
-        sub_queries = self.__get_response(prompt)
-        self.sub_queries = ast.literal_eval(sub_queries)
-        self.logger.info(f"Sub-queries for query <{self.query}> generated: <{self.sub_queries}>")
+        analysis = self.__get_response(prompt)
+        analysis = json.loads(analysis)
+        need_search, refined_query = analysis["need_search"], analysis["refined_query"]
+        self.logger.info(f"Analysis completed, need for search: <{need_search}>, refined query: <{refined_query}>")
+        return need_search, refined_query
   
-    def search(self):
+    def search(self, query):
 
         urls = []
         sources = []
@@ -97,21 +83,27 @@ class Lenze:
         start_time = time.time()
         self.logger.info('Start searching for each sub-query')
         
-        for sub_query in self.sub_queries:
-            values = {'sub_query': sub_query}  
-            # new_urls = get_urls(google_api_search(opt_query))
-            new_urls = get_urls(google_scrape_search(sub_query))
-            urls.extend(new_urls)
+        search_start = time.time()
+        urls = get_urls(google_scrape_search(query))
+        search_end = time.time()
+        self.logger.info(f'Searching took {search_end-search_start:.4f} seconds')
 
         urls = list(set(urls))
+
+        scrape_start = time.time()
         scraped_texts = scrape_urls(urls)
         for url, text in zip(urls, scraped_texts):
             sources.append({'link': url, 'text': text})
+        scrape_end = time.time()
+        self.logger.info(f'Scraping took {scrape_end-scrape_start:.4f} seconds')
 
+        store_start = time.time()
         local_store(sources)
+        store_end = time.time()
+        self.logger.info(f'Storing took {store_end-store_start:.4f} seconds')
 
         end_time = time.time()
-        self.logger.info(f'Finished searching for each sub-query and sources have been stored locally. Actions took {end_time-start_time:.4f} seconds')
+        self.logger.info(f'**Search and source storage took {end_time-start_time:.4f} seconds**')
 
     def answer(self):
 
@@ -161,12 +153,14 @@ class Lenze:
                 print(f'\n=====Query=====\n{self.query}')
                 start_time = time.time()
                 
-                if self.need_search():
-                    self.analyze()
-                    self.search()
-
+                need_search, refined_query = self.analyze()
+                
+                if need_search:
+                    self.search(refined_query)
+                
                 self.answer()
                 self.interact()
+
                 end_time = time.time()
                 time_taken = f'**Response generated in {end_time-start_time:.4f} seconds**'
                 self.logger.info(time_taken)

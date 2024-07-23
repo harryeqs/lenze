@@ -3,39 +3,30 @@ import asyncio
 from bs4 import BeautifulSoup
 from io import BytesIO
 import fitz
-import time
 from playwright.async_api import async_playwright, Error as PlaywrightError, TimeoutError as PlaywrightTimeoutError
 from typing import List
+import time
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
 
-async def fetch_content(session, url: str, timeout: float = 2) -> str:
-    """
-    Fetches content from a URL using aiohttp.
-    """
+async def fetch_content(session, url: str, timeout: float = 1.5) -> str:
     try:
-        async with session.get(url, timeout=timeout, headers=HEADERS) as response:
-            if response.status == 200:
-                return await response.text()
-            else:
-                print(f"ClientError: Failed to fetch {url}, status code: {response.status}")
-                return ""
+        async with session.get(url, timeout=timeout) as response:
+            response.raise_for_status()
+            return await response.text()
     except (aiohttp.ClientError, aiohttp.ClientResponseError) as e:
-        print(f"ClientError: Unable to access URL: {url}. Reason: {e}.")
+        #print(f"ClientError: Unable to access URL: {url}. Reason: {e}.")
         return ""
     except asyncio.TimeoutError as e:
-        print(f"TimeoutError: Timeout while accessing URL: {url}.")
+        #print(f"TimeoutError: Timeout while accessing URL: {url}.")
         return ""
     except Exception as e:
-        print(f"UnexpectedError: An unexpected error occurred while fetching {url}. Reason: {e}.")
+        #print(f"UnexpectedError: An unexpected error occurred while fetching {url}. Reason: {e}.")
         return ""
 
 async def scrape_html_content(session, url: str, max_content: int = 5000) -> str:
-    """
-    Scrapes text content from an HTML page using aiohttp and BeautifulSoup.
-    """
     html_content = await fetch_content(session, url)
     if not html_content:
         return ""
@@ -49,52 +40,43 @@ async def scrape_html_content(session, url: str, max_content: int = 5000) -> str
         text = title + '\n' + '\n'.join(p.get_text() for p in paragraphs)
         return text[:max_content]
     else:
-        print(f"ParsingError: No main content found in {url}")
+        #print(f"ParsingError: No main content found in {url}")
         return ""
 
-async def scrape_pdf_async(url: str, timeout: float = 2, max_content: int = 5000) -> str:
-    """
-    Scrapes text content from a PDF page asynchronously.
-    """
+async def scrape_pdf_async(session, url: str, timeout: float = 3, max_content: int = 5000) -> str:
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=timeout) as response:
-                if response.status != 200:
-                    print(f"ClientError: Failed to fetch {url}, status code: {response.status}")
-                    return ""
-                
-                content_type = response.headers.get('Content-Type', '')
-                if 'application/pdf' not in content_type:
-                    print(f"TypeError: The URL does not point to a PDF file. Content-Type: {content_type}")
-                    return ""
-                
-                remote_file = await response.read()
-                memory_file = BytesIO(remote_file)
-                pdf_document = fitz.open(stream=memory_file, filetype='pdf')
+        async with session.get(url, timeout=timeout) as response:
+            response.raise_for_status()
+            
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/pdf' not in content_type:
+                #print(f"TypeError: The URL does not point to a PDF file. Content-Type: {content_type}")
+                return ""
+            
+            remote_file = await response.read()
+            memory_file = BytesIO(remote_file)
+            pdf_document = fitz.open(stream=memory_file, filetype='pdf')
 
-                text = ""
-                for page_num in range(len(pdf_document)):
-                    page = pdf_document.load_page(page_num)
-                    text += page.get_text()
+            text = ""
+            for page_num in range(len(pdf_document)):
+                page = pdf_document.load_page(page_num)
+                text += page.get_text()
 
-                return text[:max_content]
+            return text[:max_content]
     except (aiohttp.ClientError, aiohttp.ClientResponseError) as e:
-        print(f"ClientError: Unable to access URL: {url}. Reason: {e}.")
+        #print(f"ClientError: Unable to access URL: {url}. Reason: {e}.")
         return ""
     except asyncio.TimeoutError as e:
-        print(f"TimeoutError: Timeout while accessing URL: {url}.")
+        #print(f"TimeoutError: Timeout while accessing URL: {url}.")
         return ""
     except ValueError as e:
-        print(f"ValueError: {e}")
+        #print(f"ValueError: {e}")
         return ""
     except Exception as e:
-        print(f"UnexpectedError: An unexpected error occurred while fetching {url}. Reason: {e}.")
+        #print(f"UnexpectedError: An unexpected error occurred while fetching {url}. Reason: {e}.")
         return ""
 
 async def scrape_js_rendered_page(url: str, timeout: float = 2, max_content: int = 5000) -> str:
-    """
-    Scrapes text content from a JavaScript-rendered page using Playwright.
-    """
     try:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
@@ -114,52 +96,44 @@ async def scrape_js_rendered_page(url: str, timeout: float = 2, max_content: int
                 text = title + '\n' + '\n'.join(p.get_text() for p in paragraphs)
                 return text[:max_content]
             else:
-                print(f"ParsingError: No main content found in {url}")
+                #print(f"ParsingError: No main content found in {url}")
                 return ""
     except (PlaywrightError, PlaywrightTimeoutError) as e:
-        print(f"PlaywrightError: Scraping {url} failed. Reason: {e}")
+        #print(f"PlaywrightError: Scraping {url} failed. Reason: {e}")
         return ""
     except Exception as e:
-        print(f"UnexpectedError: An unexpected error occurred while scraping {url}. Reason: {e}")
+        #print(f"UnexpectedError: An unexpected error occurred while scraping {url}. Reason: {e}")
         return ""
 
-async def scrape_url_async(url: str) -> str:
-    """
-    Scrapes text content from a single URL asynchronously.
-    """
+async def scrape_url_async(session, url: str) -> str:
     try:
         if url.lower().endswith('.pdf') or ('/pdf/' in url):
-            return await scrape_pdf_async(url)
+            return await scrape_pdf_async(session, url)
         else:
-            async with aiohttp.ClientSession() as session:
-                content = await scrape_html_content(session, url)
-                if content:
-                    return content
+            content = await scrape_html_content(session, url)
+            if content:
+                return content
 
-            print(f"Falling back to Playwright for JavaScript-rendered page: {url}")
+            #print(f"Falling back to Playwright for JavaScript-rendered page: {url}")
             return await scrape_js_rendered_page(url)
     except Exception as e:
-        print(f"UnexpectedError: Failed to scrape {url}. Reason: {e}")
+        #print(f"UnexpectedError: Failed to scrape {url}. Reason: {e}")
         return ""
 
 async def scrape_urls_async(urls: List[str], concurrency: int = 10) -> List[str]:
-    """
-    Scrapes text content from a list of URLs asynchronously with limited concurrency.
-    """
     semaphore = asyncio.Semaphore(concurrency)
 
     async def scrape_with_sem(url):
         async with semaphore:
-            return await scrape_url_async(url)
+            async with aiohttp.ClientSession(headers=HEADERS) as session:
+                return await scrape_url_async(session, url)
 
     tasks = [scrape_with_sem(url) for url in urls]
     return await asyncio.gather(*tasks)
 
 def scrape_urls(urls: List[str], concurrency: int = 10) -> List[str]:
-    """
-    Wrapper function to run the async scraper with limited concurrency.
-    """
     return asyncio.run(scrape_urls_async(urls, concurrency))
+
 
 if __name__ == "__main__":
     start_time = time.time()
@@ -191,7 +165,8 @@ if __name__ == "__main__":
         "https://www.uefa.com/uefachampionsleague/fixtures-results/#/d/2024-07-17",
         "https://www.japan-guide.com/forum/quereadisplay.html?0+77161"
     ]
-    scraped_texts = scrape_urls(urls_01+urls_02+urls_03)
+    scraped_texts = scrape_urls(urls_01+urls_02)
+    print(scraped_texts[-2])
     end_time = time.time()
     time_taken = f"Scraping took {end_time - start_time:.4f} seconds"
     print(time_taken)
