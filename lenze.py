@@ -175,7 +175,9 @@ class Lenze:
                 print("\nKeyboardInterrupt received. Exiting Lenze.")
                 break
             except Exception as e:
-                self.logger.error(f'An error occurred: {str(e)}')
+                error = f'An error occurred: {str(e)}' 
+                self.logger.error(error)
+                print(error)
                 break
         
         global_end = time.time()
