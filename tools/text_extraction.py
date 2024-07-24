@@ -4,42 +4,44 @@ import fitz
 from readability import Document
 from bs4 import BeautifulSoup
 import re
-import time
 
 # Function to fetch webpage content asynchronously
-async def fetch_webpage(url, timeout=3):
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        page = await context.new_page()
-        try:
-            response = await page.request.get(url, timeout=timeout*1000)
-            content_type = response.headers.get('content-type')
+async def fetch_webpage(context, url, timeout=1):
+    page = await context.new_page()
+    try:
+        response = await page.request.get(url, timeout=timeout*1000)
+        content_type = response.headers.get('content-type')
 
-            if content_type and 'application/pdf' in content_type:
-                pdf_buffer = await response.body()
-                await browser.close()
-                return pdf_buffer, 'pdf'
-            else:
-                await page.goto(url, timeout=timeout*1000, wait_until='domcontentloaded')
-                content = await page.content()
-                await browser.close()
+        if content_type and 'application/pdf' in content_type:
+            pdf_buffer = await response.body()
+            return pdf_buffer, 'pdf'
+        elif content_type and 'text/html' in content_type:
+            # Try to get the static HTML content
+            content = await response.text()
+            if '<script' not in content:
                 return content, 'html'
-        except (PlaywrightError, PlaywrightTimeoutError) as e:
-            print(f"PlaywrightError: Scraping {url} failed. Reason: {e}")
-            return None, 'error'
-        except Exception as e:
-            print(f"UnexpectedError: An unexpected error occurred while scraping {url}. Reason: {e}")
-            return None, 'error'
+            else:
+                # Fallback to page.goto for JavaScript-rendered content
+                await page.goto(url, timeout=2*timeout*1000, wait_until='domcontentloaded')
+                content = await page.content()
+                return content, 'html'
+        else:
+            await page.goto(url, timeout=timeout*1000, wait_until='domcontentloaded')
+            content = await page.content()
+            return content, 'html'
+    except (PlaywrightError, PlaywrightTimeoutError) as e:
+        print(f"PlaywrightError: Scraping {url} failed. Reason: {e}")
+        return None, 'error'
+    except Exception as e:
+        print(f"UnexpectedError: An unexpected error occurred while scraping {url}. Reason: {e}")
+        return None, 'error'
 
 # Function to extract text from a PDF file
 def extract_text_from_pdf(pdf_buffer, max_content=1000):
-    with open('data/temp.pdf', 'wb') as f:
-        f.write(pdf_buffer)
-    doc = fitz.open('data/temp.pdf')
+    pdf_document = fitz.open(stream=pdf_buffer, filetype="pdf")
     text = ""
-    for page_num in range(len(doc)):
-        page = doc.load_page(page_num)
+    for page_num in range(len(pdf_document)):
+        page = pdf_document.load_page(page_num)
         text += page.get_text()
     return text[:max_content]
 
@@ -57,15 +59,15 @@ def extract_main_content(html):
     return doc.summary()
 
 # Function to convert HTML content to plain text
-def extract_plain_text(html_content, max_content = 1000):
+def extract_plain_text(html_content, max_content=1000):
     soup = BeautifulSoup(html_content, 'html.parser')
     # Remove elements you consider irrelevant
     for irrelevant in soup(['header', 'footer', 'nav', 'aside']):
         irrelevant.decompose()
     return soup.get_text(separator='\n', strip=True)[:max_content]
 
-async def process_url(url):
-    content, content_type = await fetch_webpage(url)
+async def process_url(browser, url):
+    content, content_type = await fetch_webpage(browser, url)
     if content_type == 'pdf':
         text = extract_text_from_pdf(content)
     elif content_type == 'html':
@@ -77,21 +79,25 @@ async def process_url(url):
 
 # Function to process a list of URLs concurrently with a semaphore
 async def process_urls_async(urls, max_concurrent_tasks=10):
-    semaphore = asyncio.Semaphore(max_concurrent_tasks)
-    
-    async def sem_task(url):
-        async with semaphore:
-            return await process_url(url)
-    
-    tasks = [sem_task(url) for url in urls]
-    return await asyncio.gather(*tasks)
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context()
+        semaphore = asyncio.Semaphore(max_concurrent_tasks)
+        
+        async def sem_task(url):
+            async with semaphore:
+                return await process_url(context, url)
+        
+        tasks = [sem_task(url) for url in urls]
+        results = await asyncio.gather(*tasks)
+        await browser.close()
+        return results
 
 def process_urls(urls):
     return asyncio.run(process_urls_async(urls))
 
-
-
 if __name__ == "__main__":
+    import time
     start_time = time.time()
     urls_01 = [
         "https://myjapaneseexperience.com/traditional-japanese-food/", 
