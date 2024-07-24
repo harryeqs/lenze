@@ -163,10 +163,14 @@ if __name__ == "__main__":
     ]
     urls_03 = [
         "https://www.uefa.com/uefachampionsleague/fixtures-results/#/d/2024-07-17",
-        "https://www.japan-guide.com/forum/quereadisplay.html?0+77161"
+        "https://www.japan-guide.com/forum/quereadisplay.html?0+77161",
+        "https://teaching.eng.cam.ac.uk/sites/teaching22-23.eng.cam.ac.uk/files/CUED_Newcomers_Guide%202022-2023.pdf"
     ]
-    scraped_texts = scrape_urls(urls_01+urls_02)
-    print(scraped_texts[-2])
+
+    urls = urls_01+urls_02+urls_03
+    texts = scrape_urls(urls)
+    sources = [{'link': url, 'text': text} for url, text in zip(urls, texts)]
+    print(sources)
     end_time = time.time()
     time_taken = f"Scraping took {end_time - start_time:.4f} seconds"
     print(time_taken)

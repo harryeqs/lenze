@@ -92,8 +92,7 @@ class Lenze:
 
         scrape_start = time.time()
         scraped_texts = scrape_urls(urls)
-        for url, text in zip(urls, scraped_texts):
-            sources.append({'link': url, 'text': text})
+        sources = [{'link': url, 'text': text} for url, text in zip(urls, scraped_texts)]
         scrape_end = time.time()
         self.logger.info(f'Scraping took {scrape_end-scrape_start:.4f} seconds')
 
