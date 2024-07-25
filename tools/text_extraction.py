@@ -23,32 +23,7 @@ async def fetch_webpage(session, url, timeout=3):
                 return None, 'error'
     except Exception as e:
         print(f"FetchError: Scraping {url} failed. Reason: {e}")
-        return None, 'error'  
-"""
-def needs_js_rendering(html_content):
-    soup = BeautifulSoup(html_content, 'html.parser')
-    # Heuristic check: look for indicators of dynamic content
-    dynamic_indicators = [
-        soup.find_all(['div', 'span'], {'class': re.compile('loading|content|dynamic|js-render')}),
-        soup.find_all(attrs={"data-*": True}),
-        soup.find_all('script', src=re.compile('jquery|angular|react|vue|bootstrap')),
-        soup.find_all('div', text=re.compile('^\s*$')),  # Empty divs
-        soup.find_all('div', {'style': re.compile('display:\s*none')})
-    ]
-    return any(dynamic_indicators)
-
-# Function to fetch and render JavaScript content with Playwright
-async def fetch_js_rendered_content(context, url, timeout=2):
-    try:
-        page = await context.new_page()
-        await page.goto(url, timeout=timeout*1000, wait_until='domcontentloaded')
-        content = await page.content()
-        await page.close()
-        return content
-    except (PlaywrightError, PlaywrightTimeoutError) as e:
-        print(f"PlaywrightError: Scraping {url} failed. Reason: {e}")
-        return None
-"""
+        return None, 'error'
 
 # Function to extract text from a PDF file
 def extract_text_from_pdf(pdf_buffer, max_content=5000):

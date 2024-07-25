@@ -12,7 +12,7 @@ import json
 
 __all__ = ["Lenze"]
 
-def complete_prompt(template, values):
+def complete_template(template, values):
     """
     Fill placeholders in the template with corresponding values from the dictionary to complete prompt.
 
@@ -52,24 +52,38 @@ class Lenze:
         self.logger.addHandler(handler)
         self.logger.info('**Lenze setup completed, ready to run**')
     
-    def __get_response(self, messages: dict, max_token: int = 1000):
+    def __get_response(self, messages: dict, max_token: int = 1000, stream=True):
         start_time = time.time()
         response = self.client.chat.completions.create(
-        model=self.model,
-        messages=messages,
-        max_tokens=max_token
-    )
+            model=self.model,
+            messages=messages,
+            max_tokens=max_token,
+            stream=stream
+        )
+        
+        if stream:
+            full_response = ""
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content is not None:
+                    full_response += content
+                    print(content, end='', flush=True)
+        else:
+            full_response = response.choices[0].message.content
+            
         end_time = time.time()
         self.logger.info(f'API call took {end_time - start_time:.4f} seconds')
-        return response.choices[0].message.content
+        
+        return full_response
+            
 
     def analyze(self):
         
         self.logger.info("Analysis start")
         current_date = date.today()
         values = {'query': self.query, 'current_date': current_date, 'search_history': self.search_history}
-        prompt = complete_prompt(ANALYZE_PROMPT, values)
-        analysis = self.__get_response(prompt)
+        message = complete_template(ANALYZE_PROMPT, values)
+        analysis = self.__get_response(message, stream=False)
         analysis = json.loads(analysis)
         need_search, refined_query = analysis["need_search"], analysis["refined_query"]
         self.logger.info(f"Analysis completed, need for search: <{need_search}>, refined query: <{refined_query}>")
@@ -81,6 +95,7 @@ class Lenze:
         sources = []
 
         start_time = time.time()
+        print('\nSearching on web...\n')
         self.logger.info('Start searching for each sub-query')
         
         search_start = time.time()
@@ -113,13 +128,13 @@ class Lenze:
         sources = local_read()
         most_relevant_sources = find_most_relevant_sources(np.frombuffer(query_embedding, dtype=np.float32), sources)
         values = {'sources': most_relevant_sources, 'query': self.query}
-        prompt = complete_prompt(ANSWER_PROMPT, values)
-        response = self.__get_response(prompt)
+        message = complete_template(ANSWER_PROMPT, values)
+    
+        print('\n=====Answer=====\n')
+        response = self.__get_response(message)
         self.response = response
 
-        output = f'\n=========Answer==========\n{response}'
-        self.logger.info(output)
-        print(output)
+        self.logger.info('\n=====Answer=====\n' + response)
 
         end_time = time.time()
         self.logger.info(f'Answer generated successfully in {end_time-start_time:.4f} seconds')
@@ -131,14 +146,15 @@ class Lenze:
         start_time = time.time()
         self.logger.info('Start generating related queries')
         values = {'query': self.query, 'response': self.response}
-        prompt = complete_prompt(INTERACTION_PROPMT, values)
-        related_queries = self.__get_response(prompt)
-        output = f'\n==========Related==========\n{related_queries}'
-        self.logger.info(output)
-        print(output)
+        message = complete_template(INTERACTION_PROPMT, values)
+
+        print('\n\n=====Related=====\n')
+        related_queries = self.__get_response(message)
+        
+        self.logger.info('\n=====Related=====\n' + related_queries)
 
         end_time = time.time()
-        self.logger.info(f'Related queries generated in {end_time-start_time:.4f} seconds')
+        self.logger.info(f'\nRelated queries generated in {end_time-start_time:.4f} seconds')
 
     def run(self):
 
@@ -149,7 +165,6 @@ class Lenze:
             try:
                 self.query = input("Enter a new query (or press Ctrl+C to exit): ")
                 self.logger.info(f'New query received: <{self.query}>')
-                print(f'\n=====Query=====\n{self.query}')
                 start_time = time.time()
                 
                 need_search, refined_query = self.analyze()
@@ -167,11 +182,11 @@ class Lenze:
             except KeyboardInterrupt:
                 print("\nKeyboardInterrupt received. Exiting Lenze.")
                 break
-            except Exception as e:
-                error = f'An error occurred: {str(e)}' 
-                self.logger.error(error)
-                print(error)
-                break
+            # except Exception as e:
+            #     error = f'An error occurred: {str(e)}' 
+            #     self.logger.error(error)
+            #     print(error)
+            #     break
         
         global_end = time.time()
         self.logger.info(f'**Lenze ran for {global_end-global_start:.4f} seconds, exiting.**')
