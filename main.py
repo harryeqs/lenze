@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from openai import OpenAI
-from lenze import Lenze
+from lenze_backend.lenze_app.lenze import Lenze
 import os
 
 if __name__ == '__main__':
