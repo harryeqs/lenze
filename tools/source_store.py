@@ -7,7 +7,6 @@ from transformers import BertTokenizer, BertModel
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
 import time
-import asyncio
 
 DB_PATH = 'data/sources.db'
 load_dotenv()
@@ -60,10 +59,11 @@ def local_store(data):
     cursor = conn.cursor()
 
     for entry in data:
-        embedding = generate_embedding(entry['text'])
-        cursor.execute('''
-            INSERT INTO sources (link, text, embedding) VALUES (?, ?, ?)
-        ''', (entry['link'], entry['text'], embedding))
+        if entry['text']:
+            embedding = generate_embedding(entry['text'])
+            cursor.execute('''
+                INSERT INTO sources (link, text, embedding) VALUES (?, ?, ?)
+            ''', (entry['link'], entry['text'], embedding))
     
     conn.commit()
     conn.close()

@@ -1,7 +1,7 @@
 from openai import OpenAI
 from tools.google_search import google_api_search, google_scrape_search, get_urls
 from tools.source_store import local_store, local_read, initialize_db, generate_embedding, find_most_relevant_sources
-from tools.web_scraper import scrape_urls
+from tools.text_extraction import process_urls
 from datetime import date, datetime
 from prompts import ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 import numpy as np
@@ -91,7 +91,7 @@ class Lenze:
         urls = list(set(urls))
 
         scrape_start = time.time()
-        scraped_texts = scrape_urls(urls)
+        scraped_texts = process_urls(urls)
         sources = [{'link': url, 'text': text} for url, text in zip(urls, scraped_texts)]
         scrape_end = time.time()
         self.logger.info(f'Scraping took {scrape_end-scrape_start:.4f} seconds')

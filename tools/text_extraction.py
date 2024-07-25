@@ -1,43 +1,57 @@
 import asyncio
-from playwright.async_api import async_playwright, Error as PlaywrightError, TimeoutError as PlaywrightTimeoutError
+import aiohttp
 import fitz
+from playwright.async_api import async_playwright, Error as PlaywrightError, TimeoutError as PlaywrightTimeoutError
 from readability import Document
 from bs4 import BeautifulSoup
 import re
 
-# Function to fetch webpage content asynchronously
-async def fetch_webpage(context, url, timeout=1):
-    page = await context.new_page()
+# Function to fetch webpage content asynchronously with aiohttp
+async def fetch_webpage(session, url, timeout=3):
     try:
-        response = await page.request.get(url, timeout=timeout*1000)
-        content_type = response.headers.get('content-type')
-
-        if content_type and 'application/pdf' in content_type:
-            pdf_buffer = await response.body()
-            return pdf_buffer, 'pdf'
-        elif content_type and 'text/html' in content_type:
-            # Try to get the static HTML content
-            content = await response.text()
-            if '<script' not in content:
+        async with session.get(url, timeout=timeout) as response:
+            content_type = response.headers.get('content-type')
+            if content_type and 'application/pdf' in content_type:
+                pdf_buffer = await response.read()
+                #print(f'URL: {url}, Type: PDF')
+                return pdf_buffer, 'pdf'
+            elif content_type and 'text/html' in content_type:
+                content = await response.text()
+                #print(f'URL: {url}, Type: HTML')
                 return content, 'html'
             else:
-                # Fallback to page.goto for JavaScript-rendered content
-                await page.goto(url, timeout=2*timeout*1000, wait_until='domcontentloaded')
-                content = await page.content()
-                return content, 'html'
-        else:
-            await page.goto(url, timeout=timeout*1000, wait_until='domcontentloaded')
-            content = await page.content()
-            return content, 'html'
+                return None, 'error'
+    except Exception as e:
+        print(f"FetchError: Scraping {url} failed. Reason: {e}")
+        return None, 'error'  
+"""
+def needs_js_rendering(html_content):
+    soup = BeautifulSoup(html_content, 'html.parser')
+    # Heuristic check: look for indicators of dynamic content
+    dynamic_indicators = [
+        soup.find_all(['div', 'span'], {'class': re.compile('loading|content|dynamic|js-render')}),
+        soup.find_all(attrs={"data-*": True}),
+        soup.find_all('script', src=re.compile('jquery|angular|react|vue|bootstrap')),
+        soup.find_all('div', text=re.compile('^\s*$')),  # Empty divs
+        soup.find_all('div', {'style': re.compile('display:\s*none')})
+    ]
+    return any(dynamic_indicators)
+
+# Function to fetch and render JavaScript content with Playwright
+async def fetch_js_rendered_content(context, url, timeout=2):
+    try:
+        page = await context.new_page()
+        await page.goto(url, timeout=timeout*1000, wait_until='domcontentloaded')
+        content = await page.content()
+        await page.close()
+        return content
     except (PlaywrightError, PlaywrightTimeoutError) as e:
         print(f"PlaywrightError: Scraping {url} failed. Reason: {e}")
-        return None, 'error'
-    except Exception as e:
-        print(f"UnexpectedError: An unexpected error occurred while scraping {url}. Reason: {e}")
-        return None, 'error'
+        return None
+"""
 
 # Function to extract text from a PDF file
-def extract_text_from_pdf(pdf_buffer, max_content=1000):
+def extract_text_from_pdf(pdf_buffer, max_content=5000):
     pdf_document = fitz.open(stream=pdf_buffer, filetype="pdf")
     text = ""
     for page_num in range(len(pdf_document)):
@@ -55,19 +69,25 @@ def clean_text(text):
 
 # Function to extract main content from HTML
 def extract_main_content(html):
-    doc = Document(html)
-    return doc.summary()
+    if html:
+        doc = Document(html)
+        return doc.summary()
+    else:
+        return None
 
 # Function to convert HTML content to plain text
-def extract_plain_text(html_content, max_content=1000):
-    soup = BeautifulSoup(html_content, 'html.parser')
-    # Remove elements you consider irrelevant
-    for irrelevant in soup(['header', 'footer', 'nav', 'aside']):
-        irrelevant.decompose()
-    return soup.get_text(separator='\n', strip=True)[:max_content]
+def extract_plain_text(html_content, max_content=5000):
+    if html_content:
+        soup = BeautifulSoup(html_content, 'html.parser')
+        # Remove elements you consider irrelevant
+        for irrelevant in soup(['header', 'footer', 'nav', 'aside']):
+            irrelevant.decompose()
+        return soup.get_text(separator='\n', strip=True)[:max_content]
+    else:
+        return 'Error fetching content'
 
-async def process_url(browser, url):
-    content, content_type = await fetch_webpage(browser, url)
+async def process_url(session, url):
+    content, content_type = await fetch_webpage(session, url)
     if content_type == 'pdf':
         text = extract_text_from_pdf(content)
     elif content_type == 'html':
@@ -78,23 +98,36 @@ async def process_url(browser, url):
     return text
 
 # Function to process a list of URLs concurrently with a semaphore
-async def process_urls_async(urls, max_concurrent_tasks=10):
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        semaphore = asyncio.Semaphore(max_concurrent_tasks)
-        
-        async def sem_task(url):
-            async with semaphore:
-                return await process_url(context, url)
-        
-        tasks = [sem_task(url) for url in urls]
-        results = await asyncio.gather(*tasks)
-        await browser.close()
-        return results
+async def process_urls_async(urls, concurrency=10):
+    """
+    async with aiohttp.ClientSession() as session:
+        async with async_playwright() as p:
+            # browser = await p.chromium.launch(headless=True)
+            # context = await browser.new_context()
+            semaphore = asyncio.Semaphore(max_concurrent_tasks)
+            
+            async def sem_task(url):
+                async with semaphore:
+                    return await process_url(session, url)
+            
+            tasks = [sem_task(url) for url in urls]
+            results = await asyncio.gather(*tasks)
+            # await browser.close()
+            return results
+    """
+    semaphore = asyncio.Semaphore(concurrency)
+
+    async def scrape_with_sem(url):
+        async with semaphore:
+            async with aiohttp.ClientSession() as session:
+                return await process_url(session, url)
+
+    tasks = [scrape_with_sem(url) for url in urls]
+    return await asyncio.gather(*tasks)
 
 def process_urls(urls):
     return asyncio.run(process_urls_async(urls))
+
 
 if __name__ == "__main__":
     import time
@@ -126,10 +159,11 @@ if __name__ == "__main__":
     urls_03 = [
         "https://www.uefa.com/uefachampionsleague/news/028a-1a4c5f292492-f6d3a5ee82bd-1000--2024-25-champions-league-who-has-qualified-directly-for-t/",
         "https://www.japan-guide.com/forum/quereadisplay.html?0+77161",
-        "https://teaching.eng.cam.ac.uk/sites/teaching22-23.eng.cam.ac.uk/files/CUED_Newcomers_Guide%202022-2023.pdf"
+        "https://teaching.eng.cam.ac.uk/sites/teaching22-23.eng.cam.ac.uk/files/CUED_Newcomers_Guide%202022-2023.pdf",
+        "https://arxiv.org/pdf/2304.08485"
     ]
 
-    urls = urls_01+urls_02
+    urls = urls_01+urls_02+urls_03
     texts = process_urls(urls)
     sources = [{'link': url, 'text': text} for url, text in zip(urls, texts)]
     print(sources)
