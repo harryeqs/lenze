@@ -10,6 +10,6 @@ if __name__ == '__main__':
 
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     client = OpenAI(api_key=OPENAI_API_KEY)
-    lenze = Lenze(client, model='gpt-3.5-turbo')
+    lenze = Lenze(client, model='gpt-4o-mini')
     
     lenze.run()
