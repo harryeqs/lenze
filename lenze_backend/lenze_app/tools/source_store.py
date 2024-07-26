@@ -59,7 +59,7 @@ def local_store(data):
     cursor = conn.cursor()
 
     for entry in data:
-        if entry['text']:
+        if entry['text'] and entry['text'] not in ['Error fetching content.', 'Enable JavaScript and cookies to continue', 'Please enable JS and disable any ad blocker', 'Access Denied']:
             embedding = generate_embedding(entry['text'])
             cursor.execute('''
                 INSERT INTO sources (link, text, embedding) VALUES (?, ?, ?)

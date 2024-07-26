@@ -190,4 +190,17 @@ class Lenze:
         
         global_end = time.time()
         self.logger.info(f'**Lenze ran for {global_end-global_start:.4f} seconds, exiting.**')
-            
+
+
+from dotenv import load_dotenv
+
+if __name__ == '__main__':
+
+    # Load environment variables
+    load_dotenv()
+
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    lenze = Lenze(client, model='gpt-3.5-turbo')
+    
+    lenze.run() 
