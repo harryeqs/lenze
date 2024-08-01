@@ -1,3 +1,22 @@
+def complete_template(template, values):
+    """
+    Fill placeholders in the template with corresponding values from the dictionary to complete prompt.
+
+    :param template: List of dictionaries representing the prompt template.
+    :param values: Dictionary containing placeholder names and their corresponding values.
+
+    :return: List of dictionaries with placeholders filled.
+    """
+    filled_template = []
+
+    for part in template:
+        filled_content = part["content"]
+        for placeholder, value in values.items():
+            filled_content = filled_content.replace(f'{{{placeholder}}}', str(value))
+        filled_template.append({"role": part["role"], "content": filled_content})
+
+    return filled_template
+
 ANALYZE_PROMPT = [
     {
         "role": "system",

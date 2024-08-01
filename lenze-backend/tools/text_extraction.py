@@ -1,7 +1,6 @@
 import asyncio
 import aiohttp
 import fitz
-from playwright.async_api import async_playwright, Error as PlaywrightError, TimeoutError as PlaywrightTimeoutError
 from readability import Document
 from bs4 import BeautifulSoup
 import re
@@ -74,22 +73,6 @@ async def process_url(session, url):
 
 # Function to process a list of URLs concurrently with a semaphore
 async def process_urls_async(urls, concurrency=10):
-    """
-    async with aiohttp.ClientSession() as session:
-        async with async_playwright() as p:
-            # browser = await p.chromium.launch(headless=True)
-            # context = await browser.new_context()
-            semaphore = asyncio.Semaphore(max_concurrent_tasks)
-            
-            async def sem_task(url):
-                async with semaphore:
-                    return await process_url(session, url)
-            
-            tasks = [sem_task(url) for url in urls]
-            results = await asyncio.gather(*tasks)
-            # await browser.close()
-            return results
-    """
     semaphore = asyncio.Semaphore(concurrency)
 
     async def scrape_with_sem(url):
