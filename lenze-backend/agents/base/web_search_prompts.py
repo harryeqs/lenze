@@ -119,6 +119,7 @@ Instructions for Answering the Query Based on Sources:
     - Ensure readability using bullet points or headings.
     - Keep the response directly related to the query without unnecessary details.
     - Make the response short, concise, and focused on the core information needed.
+    - Use Markdown formatting.
 
 **Emphasis:**
     - Focus on essential information required to answer the query.
@@ -155,6 +156,11 @@ Follow these guidelines:
 5. Introduce fresh perspectives or areas of inquiry, avoiding redundancy.
 6. The wording should be simple and straightforward.
 7. Ensure the response is generated quickly.
+
+Format of output:
+The response should be a list of related queries strictly in the form of:
+['Query 1', 'Query2', 'Query3']
+Do not include question mark at the end.
 """ },
     {
         "role": "user",

@@ -2,11 +2,12 @@ from tools.google_search import google_scrape_search, get_urls
 from tools.source_store import local_store, local_read, generate_embedding, find_most_relevant_sources
 from tools.text_extraction import process_urls
 from datetime import date
-from .base.prompts import complete_template, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
+from .base.web_search_prompts import complete_template, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 from .base.base_agent import BaseAgent
 import numpy as np
 import time
 import json
+import ast
 
 __all__ = ["WebSearchAgent"]
 
@@ -32,11 +33,13 @@ class WebSearchAgent(BaseAgent):
         
         local_store(sources)
 
-    def answer(self):
-
+    def find_sources(self):
         query_embedding = generate_embedding(self.query)
         sources = local_read()
         most_relevant_sources = find_most_relevant_sources(np.frombuffer(query_embedding, dtype=np.float32), sources)
+        return most_relevant_sources
+    
+    def answer(self, most_relevant_sources):
         values = {'sources': most_relevant_sources, 'query': self.query}
         message = complete_template(ANSWER_PROMPT, values)
     
@@ -54,7 +57,8 @@ class WebSearchAgent(BaseAgent):
 
         print('\n\n=====Related=====\n')
         related_queries = self._get_response(message)
-        return related_queries
+        related = ast.literal_eval(related_queries)
+        return related
 
     def run(self, query):
 
@@ -66,11 +70,12 @@ class WebSearchAgent(BaseAgent):
             if need_search:
                 self.search(refined_query)
             
-            response, related = self.answer(), self.interact()
+            most_relevant_sources = self.find_sources()
+            answer, related = self.answer(most_relevant_sources), self.interact()
 
             end_time = time.time()
             time_taken = f'**Response generated in {end_time-start_time:.4f} seconds**'
             print(f'\n{time_taken}\n')
 
-            return response, related
+            return answer, related
         
