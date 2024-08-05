@@ -1,16 +1,12 @@
 import sqlite3
 import os
 import numpy as np
-from dotenv import load_dotenv
-import openai
 from transformers import BertTokenizer, BertModel
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
 import time
 
 DB_PATH = 'data/sources.db'
-load_dotenv()
-openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # Initialize BERT model and tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -69,13 +65,15 @@ def local_store(data):
     conn.close()
     # print("Sources stored successfully.")
 
-def find_most_relevant_sources(query_embedding, sources, top_n=5):
+def find_most_relevant_sources(query_embedding, sources, top_n=5, similarity_threshold = 0.2):
     """
     Find the most relevant sources based on cosine similarity.
     """
     source_embeddings = [source['embedding'] for source in sources]
     similarities = cosine_similarity([query_embedding], source_embeddings).flatten()
-    most_relevant_indices = similarities.argsort()[-top_n:][::-1]
+    filtered_indices = [i for i, similarity in enumerate(similarities) if similarity > similarity_threshold]
+    filtered_indices = sorted(filtered_indices, key=lambda i: similarities[i], reverse=True)
+    most_relevant_indices = filtered_indices[:top_n]
     return [{'link': sources[i]['link'], 'text': sources[i]['text']} for i in most_relevant_indices]
 
 def local_read():

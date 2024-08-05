@@ -7,20 +7,12 @@ const SearchResult = ({ result }) => {
         return null;
     }
 
-    const { answer, sources, related, time_taken } = result;
+    const { answer, related, time_taken } = result;
 
     return (
         <div>
             <h2>Answer</h2>
             <ReactMarkdown>{answer}</ReactMarkdown>
-            <h3>Sources</h3>
-            <ul>
-                {sources.map((source, index) => (
-                    <li key={index}>
-                        <a href={source} target="_blank" rel="noopener noreferrer">{source}</a>
-                    </li>
-                ))}
-            </ul>
             <h3>Related</h3>
             <ul>
                 {Array.isArray(related) ? related.map((relatedQuery, index) => (

@@ -15,18 +15,18 @@ export const webSearch = async (query) => {
     }
 };
 
-export const webSearchStream = async (query, onMessage) => {
+export const createEventSource = (query, onMessage, onError) => {
     const eventSource = new EventSource(`${API_URL}/web-search-stream?query=${query}`);
-    
+  
     eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        onMessage(data);
+      onMessage(event.data);
     };
-
-    eventSource.onerror = (error) => {
-        console.error('Error with streaming web search:', error);
-        eventSource.close();
+  
+    eventSource.onerror = (err) => {
+      console.error("EventSource failed:", err);
+      eventSource.close();
+      if (onError) onError(err);
     };
-
-    return () => eventSource.close();
-};
+  
+    return eventSource;
+  };

@@ -160,7 +160,8 @@ Follow these guidelines:
 Format of output:
 The response should be a list of related queries strictly in the form of:
 ['Query 1', 'Query2', 'Query3']
-Do not include question mark at the end.
+Do not include question mark at the end. 
+It is import to make sure that any single quotes in sentences is escaped using a backslash (\').
 """ },
     {
         "role": "user",

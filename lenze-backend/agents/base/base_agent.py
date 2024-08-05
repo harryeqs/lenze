@@ -9,22 +9,26 @@ class BaseAgent:
         self.model = model
         self.search_history = []
     
-    def _get_response(self, messages: dict, max_token: int = 1000, stream=True):
+    def _get_response(self, messages: dict, max_token: int = 1000):
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
             max_tokens=max_token,
-            stream=stream
+            stream=False
         )
-        
-        if stream:
-            full_response = ""
-            for chunk in response:
-                content = chunk.choices[0].delta.content
-                if content is not None:
-                    full_response += content
-                    print(content, end='', flush=True)
-        else:
-            full_response = response.choices[0].message.content
-            
-        return full_response
+
+        return response.choices[0].message.content
+    
+    async def _get_response_stream(self, messages: dict, max_token: int = 1000):
+        response_stream = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            max_tokens=max_token,
+            stream=True
+        )
+
+        for event in response_stream:
+            if "content" in event.choices[0].delta:
+                current_response = event.choices[0].delta.content
+                print(current_response)
+                yield current_response
