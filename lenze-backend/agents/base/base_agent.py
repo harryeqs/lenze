@@ -1,4 +1,5 @@
 from openai import OpenAI
+import asyncio
 
 __all__ = ["BaseAgent"]
 
@@ -19,7 +20,7 @@ class BaseAgent:
 
         return response.choices[0].message.content
     
-    async def _get_response_stream(self, messages: dict, max_token: int = 1000):
+    def _get_response_stream(self, messages: dict, max_token: int = 1000):
         response_stream = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
@@ -27,8 +28,12 @@ class BaseAgent:
             stream=True
         )
 
-        for event in response_stream:
-            if "content" in event.choices[0].delta:
-                current_response = event.choices[0].delta.content
-                print(current_response)
-                yield current_response
+        for chunk in response_stream:
+            content = chunk.choices[0].delta.content
+            if content is not None:
+                yield content
+
+    async def _async_generator_wrapper(self, generator):
+        loop = asyncio.get_event_loop()
+        for item in generator:
+            yield await loop.run_in_executor(None, lambda: item)

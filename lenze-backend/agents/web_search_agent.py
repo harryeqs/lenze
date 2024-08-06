@@ -4,6 +4,7 @@ from tools.text_extraction import process_urls_async
 from datetime import date
 from .base.web_search_prompts import complete_template, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 from .base.base_agent import BaseAgent
+from typing import AsyncGenerator
 import numpy as np
 import time
 import json
@@ -51,18 +52,19 @@ class WebSearchAgent(BaseAgent):
         print(response)
         return self.response
     
-    async def answer_stream(self, most_relevant_sources):
+    async def answer_stream(self, most_relevant_sources) -> AsyncGenerator[str, None]:
         values = {'sources': most_relevant_sources, 'query': self.query}
         message = complete_template(ANSWER_PROMPT, values)
 
-        response_parts = []
+        full_response = ""
 
         print('\n=====Answer=====\n')
-        async for current_response in self._get_response_stream(message):
-            response_parts.append(current_response)
-            yield current_response
+        async for content in self._async_generator_wrapper(self._get_response_stream(message)):
+            full_response += content
+            print(content, end='', flush=True)
+            formatted_content = content.replace('\n', '\ndata: ')
+            yield f"data: {formatted_content}\n\n"
 
-        full_response = ''.join(response_parts)
         self.search_history.append({'query:': self.query, 'response': full_response})
 
     def interact(self):

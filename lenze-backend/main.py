@@ -9,7 +9,6 @@ from typing import Annotated
 from models import WebSearchResponseModel
 import os
 import time
-import json
 
 app = FastAPI()
 
@@ -59,7 +58,7 @@ async def web_search(query: Annotated[str, Query(min_length=1, max_length=100)])
         }
     )
 
-@app.get("/web-search-stream", response_model=WebSearchResponseModel)
+@app.post("/web-search-stream")
 async def web_search_stream(query: Annotated[str, Query(min_length=1, max_length=100)]):
     agent = web_search_agent
     agent.query = query

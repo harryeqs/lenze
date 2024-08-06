@@ -14,19 +14,3 @@ export const webSearch = async (query) => {
         throw error;
     }
 };
-
-export const createEventSource = (query, onMessage, onError) => {
-    const eventSource = new EventSource(`${API_URL}/web-search-stream?query=${query}`);
-  
-    eventSource.onmessage = (event) => {
-      onMessage(event.data);
-    };
-  
-    eventSource.onerror = (err) => {
-      console.error("EventSource failed:", err);
-      eventSource.close();
-      if (onError) onError(err);
-    };
-  
-    return eventSource;
-  };

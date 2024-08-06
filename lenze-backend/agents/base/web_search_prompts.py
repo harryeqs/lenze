@@ -172,5 +172,5 @@ Last response:
 {response}
 
 Please provide 5 related queries inspired by the latest pair of query and response, utilizing the entire chat history for context.
-Each query should be no more than 12 words.
+Each query should be no more than 15 words.
 """}]
