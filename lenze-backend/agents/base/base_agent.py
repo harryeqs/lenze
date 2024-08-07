@@ -37,3 +37,6 @@ class BaseAgent:
         loop = asyncio.get_event_loop()
         for item in generator:
             yield await loop.run_in_executor(None, lambda: item)
+
+    def _format_event(self, content):
+        return f"data: {content}\n\n"

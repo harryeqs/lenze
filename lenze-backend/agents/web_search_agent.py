@@ -63,9 +63,10 @@ class WebSearchAgent(BaseAgent):
             full_response += content
             print(content, end='', flush=True)
             formatted_content = content.replace('\n', '\ndata: ')
-            yield f"data: {formatted_content}\n\n"
+            yield self._format_event(formatted_content)
 
         self.search_history.append({'query:': self.query, 'response': full_response})
+        self.response = full_response
 
     def interact(self):
 
@@ -77,23 +78,3 @@ class WebSearchAgent(BaseAgent):
         related = ast.literal_eval(related_queries)
         print(related)
         return related
-
-    async def run(self, query): # for testing
-
-            self.query = query
-            start_time = time.time()
-                
-            need_search, refined_query = self.analyze()
-                
-            if need_search:
-                await self.search(refined_query)
-            
-            most_relevant_sources = self.find_sources()
-            answer, related = self.answer(most_relevant_sources), self.interact()
-
-            end_time = time.time()
-            time_taken = f'**Response generated in {end_time-start_time:.4f} seconds**'
-            print(f'\n{time_taken}\n')
-
-            return answer, related
-        

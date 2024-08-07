@@ -5,21 +5,15 @@ import ReactMarkdown from 'react-markdown';
 
 const API_URL = 'http://localhost:8000';
 
-// Function to ensure proper markdown paragraph breaks
-const ensureProperParagraphs = (text) => {
-  // Replace single newlines between sentences with double newlines
-  return text.replace(/(?<!\n)\n(?!\n)/g, '  \n');
-};
-
 const WebSearchStream = () => {
-  const responseRef = useRef('## Answer\n\n');
-  const [response, setResponse] = useState('## Answer\n\n');
+  const responseRef = useRef('');
+  const [response, setResponse] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const abortControllerRef = useRef(null);
 
   const handleSearch = (query) => {
-    responseRef.current = '## Answer\n\n';
-    setResponse('## Answer\n\n');
+    responseRef.current = '';
+    setResponse('');
     setIsStreaming(true);
     abortControllerRef.current = new AbortController();
 
@@ -41,7 +35,7 @@ const WebSearchStream = () => {
       onmessage(event) {
         console.log('Message received:', event.data);
         if (event.data) {
-          responseRef.current += ensureProperParagraphs(event.data);
+          responseRef.current += event.data;
           setResponse(responseRef.current);  // Update state to trigger re-render
         }
       },
@@ -70,8 +64,14 @@ const WebSearchStream = () => {
     <div>
       <h1>Web Search Stream</h1>
       <SearchForm onSearch={handleSearch} />
+      {isStreaming && <h2>Answer</h2>} 
       {isStreaming ? <p>Streaming response...</p> : <p></p>}
-      <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      <div style={{ 
+        whiteSpace: 'normal', 
+        wordBreak: 'break-word', 
+        hyphens: 'auto',
+        overflowWrap: 'break-word'
+      }}>
         <ReactMarkdown>{response}</ReactMarkdown>
       </div>
     </div>

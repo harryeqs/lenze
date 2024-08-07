@@ -5,10 +5,11 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from agents.web_search_agent import WebSearchAgent
 from tools.source_store import initialize_db
 from openai import OpenAI
-from typing import Annotated
+from typing import Annotated, AsyncGenerator
 from models import WebSearchResponseModel
 import os
 import time
+import json
 
 app = FastAPI()
 
@@ -58,18 +59,31 @@ async def web_search(query: Annotated[str, Query(min_length=1, max_length=100)])
         }
     )
 
-@app.post("/web-search-stream")
+@app.post("/web-search-stream", response_model=WebSearchResponseModel)
 async def web_search_stream(query: Annotated[str, Query(min_length=1, max_length=100)]):
     agent = web_search_agent
     agent.query = query
+    start_time = time.time()
 
     need_search, refined_query = agent.analyze()
     if need_search:
         await agent.search(refined_query)
     
     most_relevant_sources = agent.find_sources()
+    async def response_generator() -> AsyncGenerator[str, None]:
+        async for chunk in agent.answer_stream(most_relevant_sources):
+            yield chunk
 
-    return StreamingResponse(agent.answer_stream(most_relevant_sources), media_type="text/event-stream")
+        yield agent._format_event("--END-OF-STREAM--\n")
+
+        related_queries = agent.interact()
+        end_time = time.time()
+        time_taken = f"Response generated in {end_time - start_time:.4f} seconds" 
+        print(time_taken)
+        
+        yield agent._format_event(json.dumps({"related": related_queries, "time_taken": time_taken}))
+
+    return StreamingResponse(response_generator(), media_type="text/event-stream")
 
 @app.post("/image-search")
 def image_search(query: str):
