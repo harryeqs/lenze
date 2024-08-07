@@ -9,12 +9,18 @@ const WebSearchStream = () => {
   const responseRef = useRef('');
   const [response, setResponse] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [hasStartedStreaming, setHasStartedStreaming] = useState(false); // New state to track if streaming has started
+  const [relatedQueries, setRelatedQueries] = useState([]);
+  const [timeTaken, setTimeTaken] = useState('');
   const abortControllerRef = useRef(null);
 
   const handleSearch = (query) => {
     responseRef.current = '';
     setResponse('');
+    setRelatedQueries([]);
+    setTimeTaken('');
     setIsStreaming(true);
+    setHasStartedStreaming(true); // Set to true when streaming starts
     abortControllerRef.current = new AbortController();
 
     console.log(`Connecting to ${API_URL}/web-search-stream?query=${encodeURIComponent(query)}`);
@@ -34,7 +40,12 @@ const WebSearchStream = () => {
       },
       onmessage(event) {
         console.log('Message received:', event.data);
-        if (event.data) {
+        if (event.event === 'finaljson') {
+          const finalData = JSON.parse(event.data);
+          setRelatedQueries(finalData.related);
+          setTimeTaken(finalData.time_taken);
+          setIsStreaming(false);
+        } else if (event.data) {
           responseRef.current += event.data;
           setResponse(responseRef.current);  // Update state to trigger re-render
         }
@@ -64,7 +75,7 @@ const WebSearchStream = () => {
     <div>
       <h1>Web Search Stream</h1>
       <SearchForm onSearch={handleSearch} />
-      {isStreaming && <h2>Answer</h2>} 
+      {hasStartedStreaming && <h2>Answer</h2>} 
       {isStreaming ? <p>Streaming response...</p> : <p></p>}
       <div style={{ 
         whiteSpace: 'normal', 
@@ -74,6 +85,17 @@ const WebSearchStream = () => {
       }}>
         <ReactMarkdown>{response}</ReactMarkdown>
       </div>
+      {relatedQueries.length > 0 && (
+        <div>
+          <h3>Related</h3>
+          <ul>
+            {relatedQueries.map((query, index) => (
+              <li key={index}>{query}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {timeTaken && <p>{timeTaken}</p>}
     </div>
   );
 };

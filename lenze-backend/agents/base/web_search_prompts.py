@@ -112,8 +112,8 @@ Instructions for Answering the Query Based on Sources:
         - Source 1: website-name (url)
     - Example:
         **Sources**
-        - Source 1: Apple (https://www.apple.com/uk/)
-        - Source 2: BBC News (https://www.bbc.co.uk/news)
+        - Source 1: [Apple](https://www.apple.com/uk/)
+        - Source 2: [BBC News](https://www.bbc.co.uk/news)
     
 6. **Format the Final Answer:**
     - Ensure readability using bullet points or headings.
@@ -161,7 +161,7 @@ Format of output:
 The response should be a list of related queries strictly in the form of:
 ['Query 1', 'Query2', 'Query3']
 Do not include question mark at the end. 
-It is import to make sure that any single quotes in sentences is escaped using a backslash (\').
+It is import to make sure that ANY single quotes in sentences is escaped using a backslash (\'). Do not use U+2019 character as it is banned.
 """ },
     {
         "role": "user",

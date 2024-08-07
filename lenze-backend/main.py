@@ -73,15 +73,14 @@ async def web_search_stream(query: Annotated[str, Query(min_length=1, max_length
     async def response_generator() -> AsyncGenerator[str, None]:
         async for chunk in agent.answer_stream(most_relevant_sources):
             yield chunk
-
-        yield agent._format_event("--END-OF-STREAM--\n")
-
+            
         related_queries = agent.interact()
         end_time = time.time()
         time_taken = f"Response generated in {end_time - start_time:.4f} seconds" 
         print(time_taken)
         
-        yield agent._format_event(json.dumps({"related": related_queries, "time_taken": time_taken}))
+        final_json = json.dumps({"related": related_queries, "time_taken": time_taken})
+        yield f'event: finaljson\ndata: {final_json}\n\n'
 
     return StreamingResponse(response_generator(), media_type="text/event-stream")
 
