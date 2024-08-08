@@ -159,7 +159,7 @@ Follow these guidelines:
 
 Format of output:
 The response should be a list of related queries strictly in the form of:
-['Query 1', 'Query2', 'Query3']
+["Query 1", "Query2", "Query3"]
 Do not include question mark at the end. 
 It is import to make sure that ANY single quotes in sentences is escaped using a backslash (\'). Do not use U+2019 character as it is banned.
 """ },

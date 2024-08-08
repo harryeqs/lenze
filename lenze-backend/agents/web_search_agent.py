@@ -1,18 +1,23 @@
-from tools.google_search import google_scrape_search, get_urls
-from tools.source_store import local_store, local_read, generate_embedding, find_most_relevant_sources
-from tools.text_extraction import process_urls_async
+from tools.search import google_scrape_search, get_urls
+from tools.sources import Sources
+from tools.extractor import process_urls_async
 from datetime import date
 from .base.web_search_prompts import complete_template, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 from .base.base_agent import BaseAgent
 from typing import AsyncGenerator
 import numpy as np
-import time
 import json
 import ast
 
 __all__ = ["WebSearchAgent"]
 
 class WebSearchAgent(BaseAgent):     
+    
+    def __init__(self, client, model, session_id):
+        super().__init__(client, model)
+        self.session_id = session_id
+        self.source_manager = Sources(session_id)
+        self.search_history = []
 
     def analyze(self):
         current_date = date.today()
@@ -25,19 +30,17 @@ class WebSearchAgent(BaseAgent):
   
     async def search(self, refiend_query: str):
 
-        sources = []
         urls = get_urls(google_scrape_search(refiend_query))
         urls = list(set(urls))
 
         scraped_texts = await process_urls_async(urls)
         sources = [{'link': url, 'text': text} for url, text in zip(urls, scraped_texts)]
         
-        local_store(sources)
+        self.source_manager.store_data(sources)
 
     def find_sources(self):
-        query_embedding = generate_embedding(self.query)
-        sources = local_read()
-        most_relevant_sources = find_most_relevant_sources(np.frombuffer(query_embedding, dtype=np.float32), sources)
+        query_embedding = self.source_manager.generate_embedding(self.query)
+        most_relevant_sources = self.source_manager.find_most_relevant_sources(np.frombuffer(query_embedding, dtype=np.float32))
         return most_relevant_sources
     
     def answer(self, most_relevant_sources):
