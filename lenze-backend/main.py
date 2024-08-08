@@ -2,10 +2,12 @@
 from fastapi import FastAPI, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.encoders import jsonable_encoder
 from agents.web_search_agent import WebSearchAgent
 from tools.sources import Sources
 from sqlalchemy.orm import Session
-from models import SearchHistory, Session as DBSession, initialize_session, SessionLocal
+from models import SearchHistory, Session as DBSession
+from database import initialize_session, SessionLocal
 from openai import OpenAI
 from typing import Annotated, AsyncGenerator
 from models import WebSearchResponseModel
@@ -50,7 +52,9 @@ def start_session(db: Session = Depends(get_db)):
     db.refresh(new_session)
     sources = Sources(new_session.id)
     new_session.sources = sources.table_name
-    print(new_session.sources)
+    db.commit()
+    db.refresh(new_session)
+    print(f"Session created with sources_table: {new_session.sources}")
     return {"session_id": new_session.id, "start_time": new_session.start_time, "sources": new_session.sources}
 
 @app.get("/search-history")
@@ -62,7 +66,7 @@ def get_search_history(db: Session = Depends(get_db)):
         if first_query:
             session_histories.append({
                 "session_id": session.id,
-                "start_time": session.start_time,
+                "start_time": jsonable_encoder(session.start_time),
                 "first_query": first_query.query
             })
     return JSONResponse(content=session_histories)

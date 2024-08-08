@@ -1,16 +1,10 @@
 from pydantic import BaseModel
 import markdown
 import pytz
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 import datetime
-
-DATABASE_URL = "sqlite:///./data/search_history.db"
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+from database import Base
 
 class Session(Base):
     __tablename__ = "sessions"
@@ -29,10 +23,6 @@ class SearchHistory(Base):
     session = relationship("Session", back_populates="searches")
 
 Session.searches = relationship("SearchHistory", order_by=SearchHistory.id, back_populates="session")
-
-def initialize_session():
-    Base.metadata.create_all(bind=engine)
-
 
 def ResponseModel(BaseModel):
     id: int | None = None

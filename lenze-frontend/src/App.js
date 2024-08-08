@@ -1,16 +1,17 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import WebSearch from './components/WebSearch';
+import SearchHistory from './components/SearchHistory';
 import WebSearchStream from './components/WebSearchStream';
+import Home from './components/Home';
 
 const App = () => {
     return (
         <Router>
             <div>
                 <Routes>
-                    <Route exact path="/web-search" element={<WebSearch />} />
-                    <Route path="/web-search-stream" element={<WebSearchStream />} />
+                    <Route path="/history" element={<SearchHistory />} />
+                    <Route path="/stream/:sessionId?" element={<WebSearchStream />} />
+                    <Route path="/" element={<Home />} />
                 </Routes>
             </div>
         </Router>
