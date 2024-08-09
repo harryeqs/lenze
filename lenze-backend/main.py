@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from agents.web_search_agent import WebSearchAgent
-from tools.sources import Sources
+from tools.source_manager import Sources
 from sqlalchemy.orm import Session
 from models import SearchHistory, Session as DBSession
 from database import initialize_session, SessionLocal
@@ -109,7 +109,7 @@ async def web_search_stream(session_id: int, query: Annotated[str, Query(min_len
 
     need_search, refined_query = agent.analyze()
     if need_search:
-        await agent.search(refined_query)
+        await agent.search(refined_query, num = 20)
     
     most_relevant_sources = agent.find_sources()
     async def response_generator() -> AsyncGenerator[str, None]:
@@ -124,7 +124,7 @@ async def web_search_stream(session_id: int, query: Annotated[str, Query(min_len
         final_json = json.dumps({"related": related_queries, "time_taken": time_taken})
         yield f'event: finaljson\ndata: {final_json}\n\n'
     
-    search_entry = SearchHistory(session_id=session_id, query=query, response=agent.answer(most_relevant_sources))
+    search_entry = SearchHistory(session_id=session_id, query=query, response="PLACEHOLDER FOR RESPONSE")
     db.add(search_entry)
     db.commit()
     db.refresh(search_entry)

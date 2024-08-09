@@ -32,6 +32,7 @@ Instructions for Determining Need for Search and Generating a Refined Query:
 2. **Determine Need for Search:**
     - Analyze the given search history and current query to decide if additional sources from the web are needed to provide an accurate and comprehensive response.
     - If the search history is empty, respond with 'True'.
+    - If there are no sources, responsd with 'True'.
     - Respond with 'True' if a web search is needed, otherwise respond with 'False'.
 
 3. **Identify Key Elements (If Search Needed):**

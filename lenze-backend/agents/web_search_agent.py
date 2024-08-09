@@ -1,6 +1,6 @@
-from tools.search import google_scrape_search, get_urls
-from tools.sources import Sources
-from tools.extractor import process_urls_async
+from tools.google_search import web_search, get_urls
+from tools.source_manager import Sources
+from tools.text_extractor import process_urls_async
 from datetime import date
 from .base.web_search_prompts import complete_template, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 from .base.base_agent import BaseAgent
@@ -26,12 +26,15 @@ class WebSearchAgent(BaseAgent):
         analysis = self._get_response(message)
         analysis = json.loads(analysis)
         need_search, refined_query = analysis["need_search"], analysis["refined_query"]
+        print(f'Need search: {need_search}')
         return need_search, refined_query
   
-    async def search(self, refiend_query: str):
+    async def search(self, refined_query: str, num: int = 10):
 
-        urls = get_urls(google_scrape_search(refiend_query))
+        print(f'Searching: {refined_query}')
+        urls = web_search(refined_query, num=num)
         urls = list(set(urls))
+        print(urls)
 
         scraped_texts = await process_urls_async(urls)
         sources = [{'link': url, 'text': text} for url, text in zip(urls, scraped_texts)]
@@ -43,7 +46,7 @@ class WebSearchAgent(BaseAgent):
         most_relevant_sources = self.source_manager.find_most_relevant_sources(np.frombuffer(query_embedding, dtype=np.float32))
         return most_relevant_sources
     
-    def answer(self, most_relevant_sources):
+    def answer(self, most_relevant_sources: list[dict]):
         values = {'sources': most_relevant_sources, 'query': self.query}
         message = complete_template(ANSWER_PROMPT, values)
     
@@ -55,7 +58,7 @@ class WebSearchAgent(BaseAgent):
         print(response)
         return self.response
     
-    async def answer_stream(self, most_relevant_sources) -> AsyncGenerator[str, None]:
+    async def answer_stream(self, most_relevant_sources: list[dict]) -> AsyncGenerator[str, None]:
         values = {'sources': most_relevant_sources, 'query': self.query}
         message = complete_template(ANSWER_PROMPT, values)
 

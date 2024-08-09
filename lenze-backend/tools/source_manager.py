@@ -81,6 +81,11 @@ class Sources:
         Find the most relevant sources based on cosine similarity.
         """
         sources = self.read_data()
+
+        if not sources:
+            print("No sources found in the database.")
+            return []  # Return an empty list or handle this case as needed
+        
         source_embeddings = [source['embedding'] for source in sources]
         similarities = cosine_similarity([query_embedding], source_embeddings).flatten()
         filtered_indices = [i for i, similarity in enumerate(similarities) if similarity > similarity_threshold]
