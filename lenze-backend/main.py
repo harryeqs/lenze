@@ -109,7 +109,7 @@ async def web_search_stream(session_id: int, query: Annotated[str, Query(min_len
 
     need_search, refined_query = agent.analyze()
     if need_search:
-        await agent.search(refined_query, num = 20)
+        await agent.search(refined_query)
     
     most_relevant_sources = agent.find_sources()
     async def response_generator() -> AsyncGenerator[str, None]:

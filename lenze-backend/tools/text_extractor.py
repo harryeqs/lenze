@@ -83,6 +83,23 @@ async def process_urls_async(urls, concurrency=10):
     tasks = [scrape_with_sem(url) for url in urls]
     return await asyncio.gather(*tasks)
 
-def process_urls(urls):
-    return asyncio.run(process_urls_async(urls))
-
+if __name__ == "__main__":
+    import time
+    urls = [
+        'https://www.imdb.com/list/ls033398199/',
+        'https://www.imdb.com/list/ls064849128/',
+        'https://community.openai.com/t/can-linkreader-plugin-be-used-with-the-openai-api/281902/13',
+        'https://www.tripadvisor.co.uk/Search?q=shenzhen+travel&geo=1&ssrc=A&searchNearby=false&searchSessionId=001330f47379c3d4.ssid&blockRedirect=true&offset=0',
+        'https://gptstore.ai/plugins/-gochitchat-ai',
+        'https://www.uefa.com/about/what-we-do/our-values/',
+        'https://www.tripadvisor.co.uk/TravelersChoice-ThingsToDo',
+        'https://www.formula1.com/en/latest/all'
+    ]
+    start_time = time.time()
+    scraped_text = asyncio.run(process_urls_async(urls))
+    end_time = time.time()
+    for i, content in enumerate(scraped_text):
+        print(f"Content from URL {urls[i]}:\n")
+        print(content)
+        print("\n" + "="*80 + "\n")
+    print(f'Time taken: {end_time-start_time:.4f}s')
