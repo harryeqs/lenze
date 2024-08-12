@@ -1,7 +1,6 @@
 from tools.google_search import web_search
 from tools.source_manager import Sources
-#from tools.text_extractor import process_urls_async
-from tools.js_extractor import process_urls_async
+from tools.text_extractor import process_urls_async
 from datetime import date
 from .base.web_search_prompts import complete_template, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 from .base.base_agent import BaseAgent
