@@ -33,8 +33,11 @@ def WebSearchResponseModel(ResponseModel):
     answer: markdown.Markdown | str
     related: list[str]
 
-def ImageSearchResponseModel(ResponseModel):
-    pass
+def ConversationInfo(BaseModel):
+    query: str
+    response: str
 
-def VideoSearchResponseModel(ResponseModel):
-    pass
+def SessionInfo(BaseModel):
+    session_id: int
+    start_time: datetime.datetime | str
+    first_query: str

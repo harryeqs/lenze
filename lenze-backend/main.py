@@ -11,7 +11,7 @@ from models import SearchHistory, Session as DBSession
 from database import initialize_session, SessionLocal
 from openai import OpenAI
 from typing import Annotated, AsyncGenerator
-from models import WebSearchResponseModel
+from models import *
 import os
 import time
 import json
@@ -59,7 +59,7 @@ def start_session(db: Session = Depends(get_db)):
     print(f"Session created with sources_table: {new_session.sources}")
     return {"session_id": new_session.id, "start_time": new_session.start_time, "sources": new_session.sources}
 
-@app.get("/search-history")
+@app.get("/search-history", response_model=list[SessionInfo])
 def get_search_history(db: Session = Depends(get_db)):
     sessions = db.query(DBSession).all()
     session_histories = []
@@ -72,6 +72,17 @@ def get_search_history(db: Session = Depends(get_db)):
                 "first_query": first_query.query
             })
     return JSONResponse(content=session_histories)
+
+@app.get("/conversations/{session_id}", response_model=list[ConversationInfo])
+async def get_conversations(session_id: int, db: Session = Depends(get_db)):
+    conversations = db.query(SearchHistory).filter(SearchHistory.session_id == session_id).all()
+    conversation_histories = []
+    for conversation in conversations:
+        conversation_histories.append({
+            "query": conversation.query,
+            "response": conversation.response
+        })
+    return JSONResponse(content=conversation_histories)
 
 @app.post("/web-search-stream/{session_id}", response_model=WebSearchResponseModel)
 async def web_search_stream(session_id: int, query: Annotated[str, Query(min_length=1, max_length=100)], db: Session = Depends(get_db)):
@@ -104,9 +115,10 @@ async def web_search_stream(session_id: int, query: Annotated[str, Query(min_len
         final_json = json.dumps({"related": related_queries, "time_taken": time_taken})
         yield f'event: finaljson\ndata: {final_json}\n\n'
     
-    search_entry = SearchHistory(session_id=session_id, query=query, response="PLACEHOLDER FOR RESPONSE")
-    db.add(search_entry)
-    db.commit()
-    db.refresh(search_entry)
+        search_entry = SearchHistory(session_id=session_id, query=query, response=agent.response)
+        db.add(search_entry)
+        db.commit()
+        db.refresh(search_entry)
 
     return StreamingResponse(response_generator(), media_type="text/event-stream")
+

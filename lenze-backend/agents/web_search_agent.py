@@ -70,17 +70,17 @@ class WebSearchAgent(BaseAgent):
         values = {'sources': most_relevant_sources, 'query': self.query}
         message = complete_template(ANSWER_PROMPT, values)
 
-        full_response = ""
+        self.response = ""
 
         print('\n=====Answer=====\n')
         async for content in self._async_generator_wrapper(self._get_response_stream(message)):
-            full_response += content
+            self.response += content
             print(content, end='', flush=True)
             formatted_content = content.replace('\n', '\ndata: ')
             yield self._format_event(formatted_content)
 
-        self.search_history.append({'query:': self.query, 'response': full_response})
-        self.response = full_response
+        self.search_history.append({'query:': self.query, 'response': self.response})
+        print("Storing conversation")
 
     def interact(self):
 

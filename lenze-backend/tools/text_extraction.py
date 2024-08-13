@@ -104,7 +104,7 @@ async def process_url_inner(url, page):
         await page.close()
         return f"Error processing HTML content at {url}: {str(e)}"
 
-async def process_urls_async(urls, concurrency=15, timeout=5):
+async def process_urls_async(urls, concurrency=10, timeout=10):
     semaphore = Semaphore(concurrency)
     async with async_playwright() as playwright:
         try:
