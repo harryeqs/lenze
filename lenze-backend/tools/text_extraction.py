@@ -56,7 +56,7 @@ def extract_main_content(html, max_content=3000):
     except Exception as e:
         return f"Error extracting main content from HTML: {str(e)}"
 
-async def process_url(url, context, semaphore, retries=1):
+async def process_url(url, context, semaphore, retries=1, timeout=5):
     async with semaphore:
         try:
             page = await context.new_page()
@@ -65,34 +65,13 @@ async def process_url(url, context, semaphore, retries=1):
 
         for attempt in range(retries):
             try:
-                # Check if the URL ends with .pdf or contains /pdf/ in the path
-                if url.lower().endswith('.pdf') or '/pdf/' in url.lower():
-                    print("This is a PDF")
-                    try:
-                        # Close the page as we'll fetch the PDF directly using aiohttp
-                        await page.close()
-
-                        # Use aiohttp to fetch the PDF
-                        pdf_buffer = await fetch_pdf(url)
-
-                        if isinstance(pdf_buffer, str):  # Check if there was an error fetching the PDF
-                            return pdf_buffer
-
-                        pdf_text = extract_text_from_pdf(pdf_buffer)
-                        return pdf_text
-                    except Exception as e:
-                        return f"Error processing PDF at {url}: {str(e)}"
-
-                # If it's not a PDF, proceed with HTML content processing
-                await page.goto(url, wait_until='domcontentloaded')
-                try:
-                    content = await page.content()
-                    cleaned_content = clean_text(extract_main_content(content))
-                    await page.close()
-                    return cleaned_content
-                except Exception as e:
-                    await page.close()
-                    return f"Error processing HTML content at {url}: {str(e)}"
+                return await asyncio.wait_for(
+                    process_url_inner(url, page),
+                    timeout=timeout
+                )
+            except asyncio.TimeoutError:
+                await page.close()
+                return f"Timeout reached for {url} after {timeout} seconds"
             except Exception as e:
                 if attempt < retries - 1:
                     await asyncio.sleep(0.5)
@@ -100,7 +79,32 @@ async def process_url(url, context, semaphore, retries=1):
                     await page.close()
                     return f"Failed to fetch {url} after {retries} attempts: {str(e)}"
 
-async def process_urls_async(urls, concurrency=15):
+async def process_url_inner(url, page):
+    # Check if the URL ends with .pdf or contains /pdf/ in the path
+    if url.lower().endswith('.pdf') or '/pdf/' in url.lower():
+        try:
+            # Close the page as we'll fetch the PDF directly using aiohttp
+            await page.close()
+            pdf_buffer = await fetch_pdf(url)
+            if isinstance(pdf_buffer, str):  # Check if there was an error fetching the PDF
+                return pdf_buffer
+            pdf_text = extract_text_from_pdf(pdf_buffer)
+            return pdf_text
+        except Exception as e:
+            return f"Error processing PDF at {url}: {str(e)}"
+
+    # If it's not a PDF, proceed with HTML content processing
+    await page.goto(url, wait_until='domcontentloaded')
+    try:
+        content = await page.content()
+        cleaned_content = clean_text(extract_main_content(content))
+        await page.close()
+        return cleaned_content
+    except Exception as e:
+        await page.close()
+        return f"Error processing HTML content at {url}: {str(e)}"
+
+async def process_urls_async(urls, concurrency=15, timeout=5):
     semaphore = Semaphore(concurrency)
     async with async_playwright() as playwright:
         try:
@@ -112,7 +116,7 @@ async def process_urls_async(urls, concurrency=15):
         except Exception as e:
             return [f"Failed to launch browser or create context: {str(e)}"]
 
-        tasks = [process_url(url, context, semaphore) for url in urls]
+        tasks = [process_url(url, context, semaphore, timeout=timeout) for url in urls]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         await context.close()

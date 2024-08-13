@@ -1,13 +1,14 @@
 from tools.google_search import web_search
 from tools.source_manager import Sources
-from tools.text_extractor import process_urls_async
+from tools.text_extraction import process_urls_async
 from datetime import date
-from .base.web_search_prompts import complete_template, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
+from .base.prompts import complete_template, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 from .base.base_agent import BaseAgent
 from typing import AsyncGenerator
 import numpy as np
 import json
 import ast
+import time
 
 __all__ = ["WebSearchAgent"]
 
@@ -20,34 +21,41 @@ class WebSearchAgent(BaseAgent):
         self.search_history = []
 
     def analyze(self):
+
         current_date = date.today()
         values = {'query': self.query, 'current_date': current_date, 'search_history': self.search_history}
         message = complete_template(ANALYZE_PROMPT, values)
         analysis = self._get_response(message)
         analysis = json.loads(analysis)
         need_search, refined_query = analysis["need_search"], analysis["refined_query"]
+        self.refined_query = refined_query
         print(f'Need search: {need_search}')
-        return need_search, refined_query
+        return need_search
   
-    async def search(self, refined_query: str, num: int = 10):
+    async def search(self, num: int = 10):
 
-        print(f'Searching: {refined_query}')
-        urls = web_search(refined_query, num=num)
-        urls = list(set(urls))
-        print(urls)
-
+        print(f'Searching: {self.refined_query}')
+        sources = web_search(self.refined_query, num=num)
+        urls = [source['link'] for source in sources]
+        start_time = time.time()
         scraped_texts = await process_urls_async(urls)
-        sources = [{'link': url, 'text': text} for url, text in zip(urls, scraped_texts)]
+        end_time = time.time()
+        print(f'\n**Text extractions took {end_time - start_time:.4f}**')
+        for i in range(len(sources)):
+            sources[i]['text'] = scraped_texts[i]
+            print(sources)
         
         self.source_manager.store_data(sources)
 
     def find_sources(self):
-        query_embedding = self.source_manager.generate_embedding(self.query)
+
+        query_embedding = self.source_manager.generate_embedding(self.refined_query)
         most_relevant_sources = self.source_manager.find_most_relevant_sources(np.frombuffer(query_embedding, dtype=np.float32))
         return most_relevant_sources
     
     def answer(self, most_relevant_sources: list[dict]):
-        values = {'sources': most_relevant_sources, 'query': self.query}
+        
+        values = {'sources': most_relevant_sources, 'query': self.refined_query}
         message = complete_template(ANSWER_PROMPT, values)
     
         print('\n=====Answer=====\n')

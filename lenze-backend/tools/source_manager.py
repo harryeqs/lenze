@@ -28,6 +28,7 @@ class Sources:
         cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS {self.table_name} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
                 link TEXT,
                 text TEXT,
                 embedding BLOB
@@ -57,8 +58,8 @@ class Sources:
             if entry['text'] and entry['text'] not in ['Error fetching content.', 'Enable JavaScript and cookies to continue', 'Please enable JS and disable any ad blocker', 'Access Denied']:
                 embedding = self.generate_embedding(entry['text'])
                 cursor.execute(f'''
-                    INSERT INTO {self.table_name} (link, text, embedding) VALUES (?, ?, ?)
-                ''', (entry['link'], entry['text'], embedding))
+                    INSERT INTO {self.table_name} (title, link, text, embedding) VALUES (?, ?, ?, ?)
+                ''', (entry['title'], entry['link'], entry['text'], embedding))
         
         conn.commit()
         conn.close()
@@ -69,14 +70,14 @@ class Sources:
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute(f'SELECT link, text, embedding FROM {self.table_name}')
+        cursor.execute(f'SELECT title, link, text, embedding FROM {self.table_name}')
         rows = cursor.fetchall()
         conn.close()
 
-        data = [{'link': row[0], 'text': row[1], 'embedding': np.frombuffer(row[2], dtype=np.float32)} for row in rows]
+        data = [{'title': row[0], 'link': row[1], 'text': row[2], 'embedding': np.frombuffer(row[3], dtype=np.float32)} for row in rows]
         return data
 
-    def find_most_relevant_sources(self, query_embedding, top_n=5, similarity_threshold=0.2):
+    def find_most_relevant_sources(self, query_embedding, top_n=5, similarity_threshold=0.5):
         """
         Find the most relevant sources based on cosine similarity.
         """
@@ -89,6 +90,7 @@ class Sources:
         source_embeddings = [source['embedding'] for source in sources]
         similarities = cosine_similarity([query_embedding], source_embeddings).flatten()
         filtered_indices = [i for i, similarity in enumerate(similarities) if similarity > similarity_threshold]
+        print(filtered_indices)
         filtered_indices = sorted(filtered_indices, key=lambda i: similarities[i], reverse=True)
         most_relevant_indices = filtered_indices[:top_n]
-        return [{'link': sources[i]['link'], 'text': sources[i]['text']} for i in most_relevant_indices]
+        return [{'title': sources[i]['title'], 'link': sources[i]['link'], 'text': sources[i]['text']} for i in most_relevant_indices]

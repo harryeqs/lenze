@@ -17,23 +17,27 @@ const WebSearchStream = () => {
     const responseRef = useRef('');
     const [response, setResponse] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
+    const [isSearching, setIsSeaching] = useState(false);
     const [hasStartedStreaming, setHasStartedStreaming] = useState(false);
     const [relatedQueries, setRelatedQueries] = useState([]);
     const [timeTaken, setTimeTaken] = useState('');
+    const [sources, setSources] = useState([]);
     const abortControllerRef = useRef(null);
 
     const handleSearch = useCallback((query) => {
         if (!sessionId) {
             alert('No session ID available.');
             return;
-        }
+        };
+        setIsSeaching(true);
+        setHasStartedStreaming(false);
+        
 
         responseRef.current = '';
         setResponse('');
         setRelatedQueries([]);
         setTimeTaken('');
-        setIsStreaming(true);
-        setHasStartedStreaming(true);
+        setSources([]);
         abortControllerRef.current = new AbortController();
 
         console.log(`Connecting to ${API_URL}/web-search-stream/${sessionId}?query=${encodeURIComponent(query)}`);
@@ -58,9 +62,17 @@ const WebSearchStream = () => {
                     setRelatedQueries(finalData.related);
                     setTimeTaken(finalData.time_taken);
                     setIsStreaming(false);
+                    console.log("Related queries and time taken recieved")
+                } else if (event.event === 'source') {
+                    const sourcesData = JSON.parse(event.data);
+                    setSources(sourcesData);
+                    console.log("Sources received");
+                    setIsSeaching(false)
                 } else if (event.data) {
                     responseRef.current += event.data;
                     setResponse(responseRef.current);
+                    setIsStreaming(true);
+                    setHasStartedStreaming(true);
                 }
             },
             onclose() {
@@ -92,7 +104,22 @@ const WebSearchStream = () => {
             <h1>Web Search Stream</h1>
             <button onClick={() => navigate('/')}>Start New Session</button>
             <SearchForm onSearch={handleSearch} />
-            {hasStartedStreaming && <h2>Answer</h2>}
+            {isSearching ? <p>Searching...</p> : <p></p>}
+            {sources.length > 0 && (
+                <div>
+                    <h3>Sources</h3> {/* Heading for sources */}
+                    <ol>
+                        {sources.map((source, index) => (
+                            <li key={index}>
+                                <a href={source.link} target="_blank" rel="noopener noreferrer">
+                                    {source.title}
+                                </a>
+                            </li>
+                        ))}
+                    </ol>
+                </div>
+            )}
+            {hasStartedStreaming && <h3>Answer</h3>}
             {isStreaming ? <p>Streaming response...</p> : <p></p>}
             <div style={{
                 whiteSpace: 'normal',

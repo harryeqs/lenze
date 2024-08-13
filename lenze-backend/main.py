@@ -77,12 +77,14 @@ async def web_search(session_id: int, query: Annotated[str, Query(min_length=1, 
     agent.query = query
     start_time = time.time()
 
-    need_search, refined_query = agent.analyze()
+    need_search = agent.analyze()
     if need_search:
-        await agent.search(refined_query)
+        await agent.search()
     
     most_relevant_sources = agent.find_sources()
-    response = agent.answer(most_relevant_sources)
+    source_links = [{'index': i+1, 'link': source['link']} for i, source in enumerate(most_relevant_sources)]
+    source_contents = [{'index': i+1, 'text': source['text']} for i, source in enumerate(most_relevant_sources)]
+    response = agent.answer(source_contents)
     related_queries = agent.interact()
 
     end_time = time.time()
@@ -95,6 +97,7 @@ async def web_search(session_id: int, query: Annotated[str, Query(min_length=1, 
 
     return JSONResponse(
         content={
+            "sources": source_links,
             "answer": response,
             "related": related_queries,
             "time_taken": time_taken,
@@ -107,19 +110,27 @@ async def web_search_stream(session_id: int, query: Annotated[str, Query(min_len
     agent.query = query
     start_time = time.time()
 
-    need_search, refined_query = agent.analyze()
+    need_search = agent.analyze()
     if need_search:
-        await agent.search(refined_query)
+        search_start = time.time()
+        await agent.search()
+        search_end = time.time()
+        print(f'\n**Search took {search_end-search_start:.4f} seconds**\n')
+
     
     most_relevant_sources = agent.find_sources()
+    source_links = json.dumps([{'index': i+1, 'title': source['title'], 'link': source['link']} for i, source in enumerate(most_relevant_sources)])
+    source_contents = [{'index': i+1, 'text': source['text']} for i, source in enumerate(most_relevant_sources)]
+
     async def response_generator() -> AsyncGenerator[str, None]:
-        async for chunk in agent.answer_stream(most_relevant_sources):
+        yield f'event: source\ndata: {source_links}\n\n'
+        async for chunk in agent.answer_stream(source_contents):
             yield chunk
             
         related_queries = agent.interact()
         end_time = time.time()
         time_taken = f"Response generated in {end_time - start_time:.4f} seconds" 
-        print(time_taken)
+        print(f'\n**{time_taken}**\n')
         
         final_json = json.dumps({"related": related_queries, "time_taken": time_taken})
         yield f'event: finaljson\ndata: {final_json}\n\n'

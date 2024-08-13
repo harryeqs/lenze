@@ -21,7 +21,8 @@ ANALYZE_PROMPT = [
     {
         "role": "system",
         "content": """
-You are an intelligent assistant that helps determine the need for web searches based on user query and search history. If a web search is needed, you will also generate a refined query for searching the web.
+You are an intelligent assistant that helps determine the need for web searches based on user query and search history. 
+After determining the need for web searches, refine the query. Please refer to the search history to make the query a standalone question that can be directly searched on.
 
 Instructions for Determining Need for Search and Generating a Refined Query:
 
@@ -43,7 +44,7 @@ Instructions for Determining Need for Search and Generating a Refined Query:
     - Break down the query into essential keywords.
     - Remove command words like 'compare' and 'list'.
     - Incorporate any relevant terms or details mentioned in the search history to maintain consistency and accuracy.
-    - Reference the search history for any pronouns in the query and replace them with exact objects.
+    - Reference the search history for any pronouns in a follow up query and replace them with exact objects, to make the query a standalone question.
 
 5. **Formulate the Refined Query:**
     - Combine the refined keywords into a coherent and effective search query.
@@ -51,7 +52,7 @@ Instructions for Determining Need for Search and Generating a Refined Query:
     - Include date when the query is time-sensitive.
 
 Goal:
-First, determine if a web search is needed. If it is, provide an refined version of the query. If not, leave the "refined_query" as ""
+First, determine if a web search is needed. Next, provide an refined version of the query.
 Format:
 {
   "need_search": true/false,
@@ -103,24 +104,15 @@ Instructions for Answering the Query Based on Sources:
     - Do not provide additional details not asked explicitly in the original query.
 
 5. **Cite Sources Appropriately:**
-    Steps to follow:
-    1. Cite each piece of information in the format (Source <index>), where <index> corresponds to the index of the source.
-    - Example: 
-        - Keypoint 1 (Source 1)
-        - Keypoint 2 (Source 2)
-    2. List the sources at the end of the answer, indexed in the format provided below. Re-index the sources in each new answer, starting from 1, ensuring indices are consecutive. Only include the sources that have been referenced in the answer.
-    - Format:
-        - Source 1: website-name (url)
-    - Example:
-        **Sources**
-        - Source 1: [Apple](https://www.apple.com/uk/)
-        - Source 2: [BBC News](https://www.bbc.co.uk/news)
+    - The sources are provided in the format [{'index': index, 'text': content}]
+    - For each point, cite the index using the source at the end in the form of:
+        - Key point (Source 1)
     
 6. **Format the Final Answer:**
     - Ensure readability using bullet points or headings.
     - Keep the response directly related to the query without unnecessary details.
     - Make the response short, concise, and focused on the core information needed.
-    - Use Markdown formatting.
+    - Use Markdown formatting (Do not include headings in the answer).
 
 **Emphasis:**
     - Focus on essential information required to answer the query.
@@ -136,8 +128,7 @@ Based on the following sources, please respond to the query comprehensively and 
 **Sources:**
 {sources}
 
-The final output should address the query and provide citations for each piece of information strictly in the required format. Please do not include the steps.
-Ensure that the link to the source is included in the citation.
+The final output should address the query and provide citations for each piece of information. Please do not include the steps.
 """
     }
 ]
@@ -175,3 +166,63 @@ Last response:
 Please provide 5 related queries inspired by the latest pair of query and response, utilizing the entire chat history for context.
 Each query should be no more than 15 words.
 """}]
+
+IMAGE_SEARCH_PROMPT = [
+    {
+        "role": "system",
+        "content": """
+You are a helpful assistant to generate a rephrased query suitable for online image search given an original query and a search history. 
+You will need to rephrase any follow-up query to ensure it is a standalone query by referencing the search history.
+
+Example:
+1. Follow up question: What is a cat?
+Rephrased: A cat
+
+2. Follow up question: What is a car? How does it works?
+Rephrased: Car working
+
+3. Follow up question: How does an AC work?
+Rephrased: AC working
+"""
+    },
+    {
+        "role": "user",
+        "content": """
+Search history:
+{search_history}
+
+Query:
+{query}
+"""
+    }
+]
+
+VIDEO_SEARCH_PROPMT = [
+    {
+        "role": "system",
+        "content": """
+You are a helpful assistant to generate a rephrased query suitable for online image search given an original query and a search history. 
+You will need to rephrase any follow-up query to ensure it is a standalone query by referencing the search history.
+
+Example:
+  1. Follow up question: How does a car work?
+  Rephrased: How does a car work?
+  
+  2. Follow up question: What is the theory of relativity?
+  Rephrased: What is theory of relativity
+  
+  3. Follow up question: How does an AC work?
+  Rephrased: How does an AC work
+"""
+    },
+    {
+        "role": "user",
+        "content": """
+Search history:
+{search_history}
+
+Query:
+{query}
+"""
+    }
+]
