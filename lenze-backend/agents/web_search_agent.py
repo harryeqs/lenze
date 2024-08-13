@@ -1,6 +1,7 @@
-from tools.google_search import web_search
 from tools.source_manager import Sources
+from tools.google_search import SearchEngine
 from tools.text_extraction import process_urls_async
+from openai import OpenAI
 from datetime import date
 from .base.prompts import complete_template, ANALYZE_PROMPT, ANSWER_PROMPT, INTERACTION_PROPMT
 from .base.base_agent import BaseAgent
@@ -14,10 +15,11 @@ __all__ = ["WebSearchAgent"]
 
 class WebSearchAgent(BaseAgent):     
     
-    def __init__(self, client, model, session_id):
+    def __init__(self, client: OpenAI, model: str, session_id: int, search_engine: SearchEngine):
         super().__init__(client, model)
         self.session_id = session_id
         self.source_manager = Sources(session_id)
+        self.search_engine = search_engine
         self.search_history = []
 
     def analyze(self):
@@ -35,7 +37,7 @@ class WebSearchAgent(BaseAgent):
     async def search(self, num: int = 10):
 
         print(f'Searching: {self.refined_query}')
-        sources = web_search(self.refined_query, num=num)
+        sources = self.search_engine.web_search(self.refined_query, num=num)
         urls = [source['link'] for source in sources]
         start_time = time.time()
         scraped_texts = await process_urls_async(urls)
@@ -43,8 +45,6 @@ class WebSearchAgent(BaseAgent):
         print(f'\n**Text extractions took {end_time - start_time:.4f}**')
         for i in range(len(sources)):
             sources[i]['text'] = scraped_texts[i]
-            print(sources)
-        
         self.source_manager.store_data(sources)
 
     def find_sources(self):

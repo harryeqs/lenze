@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import SearchForm from './SearchForm';
-import ReactMarkdown from 'react-markdown';
+import ResponseDisplay from './ResponseDisplay';
+import RelatedQueries from './RelatedQueries';
+import SourcesList from './SourcesList';
 
 const API_URL = 'http://localhost:8000';
 
@@ -31,8 +33,6 @@ const WebSearchStream = () => {
         };
         setIsSeaching(true);
         setHasStartedStreaming(false);
-        
-
         responseRef.current = '';
         setResponse('');
         setRelatedQueries([]);
@@ -104,41 +104,12 @@ const WebSearchStream = () => {
             <h1>Web Search Stream</h1>
             <button onClick={() => navigate('/')}>Start New Session</button>
             <SearchForm onSearch={handleSearch} />
-            {isSearching ? <p>Searching...</p> : <p></p>}
-            {sources.length > 0 && (
-                <div>
-                    <h3>Sources</h3> {/* Heading for sources */}
-                    <ol>
-                        {sources.map((source, index) => (
-                            <li key={index}>
-                                <a href={source.link} target="_blank" rel="noopener noreferrer">
-                                    {source.title}
-                                </a>
-                            </li>
-                        ))}
-                    </ol>
-                </div>
-            )}
+            {isSearching && <p>Searching...</p>}
+            <SourcesList sources={sources} />
             {hasStartedStreaming && <h3>Answer</h3>}
-            {isStreaming ? <p>Streaming response...</p> : <p></p>}
-            <div style={{
-                whiteSpace: 'normal',
-                wordBreak: 'break-word',
-                hyphens: 'auto',
-                overflowWrap: 'break-word'
-            }}>
-                <ReactMarkdown>{response}</ReactMarkdown>
-            </div>
-            {relatedQueries.length > 0 && (
-                <div>
-                    <h3>Related</h3>
-                    <ul>
-                        {relatedQueries.map((query, index) => (
-                            <li key={index}>{query}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            {isStreaming && <p>Streaming response...</p>}
+            <ResponseDisplay response={response} />
+            <RelatedQueries queries={relatedQueries} />
             {timeTaken && <p>{timeTaken}</p>}
         </div>
     );

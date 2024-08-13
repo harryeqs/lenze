@@ -5,6 +5,7 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from agents.web_search_agent import WebSearchAgent
 from tools.source_manager import Sources
+from tools.google_search import SearchEngine
 from sqlalchemy.orm import Session
 from models import SearchHistory, Session as DBSession
 from database import initialize_session, SessionLocal
@@ -33,6 +34,7 @@ app.add_middleware(
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=OPENAI_API_KEY)
+search_engine = SearchEngine()
 
 initialize_session()
 
@@ -71,42 +73,9 @@ def get_search_history(db: Session = Depends(get_db)):
             })
     return JSONResponse(content=session_histories)
 
-@app.post("/web-search/{session_id}", response_model=WebSearchResponseModel)
-async def web_search(session_id: int, query: Annotated[str, Query(min_length=1, max_length=100)], db: Session = Depends(get_db)) -> JSONResponse:
-    agent = WebSearchAgent(client, 'gpt-4o-mini', session_id)
-    agent.query = query
-    start_time = time.time()
-
-    need_search = agent.analyze()
-    if need_search:
-        await agent.search()
-    
-    most_relevant_sources = agent.find_sources()
-    source_links = [{'index': i+1, 'link': source['link']} for i, source in enumerate(most_relevant_sources)]
-    source_contents = [{'index': i+1, 'text': source['text']} for i, source in enumerate(most_relevant_sources)]
-    response = agent.answer(source_contents)
-    related_queries = agent.interact()
-
-    end_time = time.time()
-    time_taken = f"Response generated in {end_time - start_time:.4f} seconds"
-
-    search_entry = SearchHistory(session_id=session_id, query=query, response=response)
-    db.add(search_entry)
-    db.commit()
-    db.refresh(search_entry)
-
-    return JSONResponse(
-        content={
-            "sources": source_links,
-            "answer": response,
-            "related": related_queries,
-            "time_taken": time_taken,
-        }
-    )
-
 @app.post("/web-search-stream/{session_id}", response_model=WebSearchResponseModel)
 async def web_search_stream(session_id: int, query: Annotated[str, Query(min_length=1, max_length=100)], db: Session = Depends(get_db)):
-    agent = WebSearchAgent(client, 'gpt-4o-mini', session_id)
+    agent = WebSearchAgent(client, 'gpt-4o-mini', session_id, search_engine)
     agent.query = query
     start_time = time.time()
 
