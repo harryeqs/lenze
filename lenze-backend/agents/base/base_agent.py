@@ -1,11 +1,13 @@
 from openai import OpenAI
+from tools.google_search import SearchEngine
 import asyncio
 
 __all__ = ["BaseAgent"]
 
 class BaseAgent:
-    def __init__(self, client: OpenAI, model: str):
-
+    def __init__(self, client: OpenAI, model: str, session_id: int, search_engine: SearchEngine):
+        self.session_id = session_id
+        self.search_engine = search_engine
         self.client = client
         self.model = model
         self.search_history = []

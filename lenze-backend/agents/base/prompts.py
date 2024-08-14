@@ -197,7 +197,7 @@ Query:
     }
 ]
 
-VIDEO_SEARCH_PROPMT = [
+VIDEO_SEARCH_PROMPT = [
     {
         "role": "system",
         "content": """

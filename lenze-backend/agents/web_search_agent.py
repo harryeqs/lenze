@@ -16,10 +16,8 @@ __all__ = ["WebSearchAgent"]
 class WebSearchAgent(BaseAgent):     
     
     def __init__(self, client: OpenAI, model: str, session_id: int, search_engine: SearchEngine):
-        super().__init__(client, model)
-        self.session_id = session_id
+        super().__init__(client, model, session_id, search_engine)
         self.source_manager = Sources(session_id)
-        self.search_engine = search_engine
         self.search_history = []
 
     def analyze(self):

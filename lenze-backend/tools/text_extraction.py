@@ -56,7 +56,7 @@ def extract_main_content(html, max_content=3000):
     except Exception as e:
         return f"Error extracting main content from HTML: {str(e)}"
 
-async def process_url(url, context, semaphore, retries=1, timeout=5):
+async def process_url(url, context, semaphore, retries=1, timeout=10):
     async with semaphore:
         try:
             page = await context.new_page()

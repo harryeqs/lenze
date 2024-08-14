@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.encoders import jsonable_encoder
 from agents.web_search_agent import WebSearchAgent
+from agents.image_search_agent import ImageSearchAgent
+from agents.video_search_agent import VideoSearchAgent
 from tools.source_manager import Sources
 from tools.google_search import SearchEngine
 from sqlalchemy.orm import Session
@@ -122,3 +124,16 @@ async def web_search_stream(session_id: int, query: Annotated[str, Query(min_len
 
     return StreamingResponse(response_generator(), media_type="text/event-stream")
 
+@app.post("/video-search/{session_id}")
+def video_search(session_id: int, query: Annotated[str, Query(min_length=1, max_length=100)]) -> list[str]:
+    agent = VideoSearchAgent(client, 'gpt-4o-mini', session_id, search_engine)
+    agent.query = query
+    video_ids = agent.search()
+    return JSONResponse(content=video_ids)
+
+@app.post("/image_serch/{session_id}")
+def image_search(session_id: int, query: Annotated[str, Query(min_length=1, max_length=100)]) -> list[str]:
+    agent = ImageSearchAgent(client, 'gpt-4o-mini', session_id, search_engine)
+    agent.query = query
+    image_urls = agent.search()
+    return JSONResponse(content=image_urls)

@@ -24,11 +24,9 @@ class SearchHistory(Base):
 
 Session.searches = relationship("SearchHistory", order_by=SearchHistory.id, back_populates="session")
 
-def ResponseModel(BaseModel):
+def WebSearchResponseModel(BaseModel):
     id: int | None = None
     time_taken: str
-
-def WebSearchResponseModel(ResponseModel):
     sources: list[dict]
     answer: markdown.Markdown | str
     related: list[str]
