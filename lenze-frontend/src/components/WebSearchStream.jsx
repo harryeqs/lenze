@@ -4,7 +4,8 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import SearchForm from './SearchForm';
 import ResponseDisplay from './ResponseDisplay';
 import RelatedQueries from './RelatedQueries';
-import SourcesList from './SourcesList';
+import SourcesList from './SourcesList'
+import './WebSearchStream.css';
 
 const API_URL = 'http://localhost:8000';
 
@@ -108,9 +109,9 @@ const WebSearchStream = () => {
     useEffect(() => {
         if (query) {
             handleSearch(query);
+            
         }
 
-        // Fetch previous conversations when component mounts
         fetchPreviousConversations();
 
         return () => {
@@ -121,8 +122,8 @@ const WebSearchStream = () => {
     }, [query, handleSearch, fetchPreviousConversations]);
 
     return (
-        <div>
-            <h1>Web Search Stream</h1>
+        <div className="web-search-container">
+            <h1>Web Search</h1>
             {previousConversations.length > 0 && (
                 <div>
                     <ul>
@@ -130,22 +131,23 @@ const WebSearchStream = () => {
                             <li key={index}>
                                 <h2>{conv.query}</h2>
                                 <h3>Answer</h3>
-                                <ResponseDisplay response={conv.response} />
+                                <ResponseDisplay className="response-display" response={conv.response} />
                             </li>
                         ))}
                     </ul>
                 </div>
             )}
-            <button onClick={() => navigate('/')}>Start New Session</button>
-            <SearchForm onSearch={handleSearch} />
             {currentQuery && <h2>{currentQuery}</h2>}
-            {isSearching && <p>Searching...</p>}
-            <SourcesList sources={sources} />
+            {isSearching && <p style={{ color: 'grey' }}>Searching...</p>}
+            <SourcesList className="sources-list" sources={sources} />
             {hasStartedStreaming && <h3>Answer</h3>}
-            {isStreaming && <p>Streaming response...</p>}
-            <ResponseDisplay response={response} />
-            <RelatedQueries queries={relatedQueries} />
-            {timeTaken && <p>{timeTaken}</p>}
+            {isStreaming && <p style={{ color: 'grey' }}>Streaming response...</p>}
+            <ResponseDisplay className="response-display" response={response} />
+            <RelatedQueries className="related-queries" queries={relatedQueries} />
+            {timeTaken && <p style={{ color: 'grey' }}>{timeTaken}</p>}
+            <SearchForm className="search-form" onSearch={handleSearch} />
+            <button onClick={() => navigate('/')}>Start New Session</button>
+            <button onClick={() => navigate('/history')}>View Search History</button>
         </div>
     );
 };

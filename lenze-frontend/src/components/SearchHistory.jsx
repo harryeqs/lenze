@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-
-const API_URL = 'http://localhost:8000';
+import { useNavigate } from 'react-router-dom'
+import './SearchHistory.css';const API_URL = 'http://localhost:8000';
 
 const SearchHistory = () => {
     const [history, setHistory] = useState([]);
@@ -34,7 +33,7 @@ const SearchHistory = () => {
                 <ul>
                     {history.map((session) => (
                         <li key={session.session_id}>
-                            <button onClick={() => enterSession(session.session_id)}>
+                            <button className="search-history-button" onClick={() => enterSession(session.session_id)}>
                                 Enter Session {session.session_id} - {session.first_query}
                             </button>
                         </li>

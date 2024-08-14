@@ -1,4 +1,3 @@
-// src/components/SearchForm.js
 import React, { useState } from 'react';
 
 const SearchForm = ({ onSearch }) => {
@@ -10,15 +9,17 @@ const SearchForm = ({ onSearch }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Enter your search query"
-            />
-            <button type="submit">Search</button>
-        </form>
+        <div className="search-form">
+            <form onSubmit={handleSubmit}>
+                <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Enter your search query"
+                />
+                <button type="submit">Search</button>
+            </form>
+        </div>
     );
 };
 
