@@ -77,11 +77,11 @@ class Sources:
         data = [{'title': row[0], 'link': row[1], 'text': row[2], 'embedding': np.frombuffer(row[3], dtype=np.float32)} for row in rows]
         return data
 
-    def find_most_relevant_sources(self, query_embedding, top_n=5, similarity_threshold=0.6):
+    def find_most_relevant_sources(self, query_embedding, top_n=5, similarity_threshold=0.6, scope=20):
         """
         Find the most relevant sources based on cosine similarity.
         """
-        sources = self.read_data()
+        sources = self.read_data()[-scope:]
 
         if not sources:
             print("No sources found in the database.")
