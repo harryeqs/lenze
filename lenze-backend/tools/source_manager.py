@@ -1,13 +1,13 @@
 import sqlite3
 import numpy as np
-from transformers import BertTokenizer, BertModel
+from transformers import RobertaTokenizer, RobertaModel
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 
 # Initialize BERT model and tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased')
+tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
+model = RobertaModel.from_pretrained('roberta-base')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model.to(device)
 
@@ -77,7 +77,7 @@ class Sources:
         data = [{'title': row[0], 'link': row[1], 'text': row[2], 'embedding': np.frombuffer(row[3], dtype=np.float32)} for row in rows]
         return data
 
-    def find_most_relevant_sources(self, query_embedding, top_n=5, similarity_threshold=0.6, scope=20):
+    def find_most_relevant_sources(self, query_embedding, top_n=5, similarity_threshold=0.7, scope=20):
         """
         Find the most relevant sources based on cosine similarity.
         """
@@ -89,6 +89,7 @@ class Sources:
         
         source_embeddings = [source['embedding'] for source in sources]
         similarities = cosine_similarity([query_embedding], source_embeddings).flatten()
+        print(similarities)
         filtered_indices = [i for i, similarity in enumerate(similarities) if similarity > similarity_threshold]
         print(filtered_indices)
         filtered_indices = sorted(filtered_indices, key=lambda i: similarities[i], reverse=True)
