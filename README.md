@@ -21,3 +21,25 @@ Lenze’s AI-driven capabilities allow it to parse complex queries, understand c
 **Embedding Model:** OpenAI *text-embedding-3-small*
 
 ## Getting started
+
+1. Clone this Github repo:
+```
+git clone https://github.com/harryeqs/lenze.git
+```
+2. Enter the directory of this repo.
+3. Enter the frontend folder and install ```npm```:
+```
+cd lenze-frontend
+npm install
+```
+4. Go back to the main directory and create a ```.env``` file.
+<br>In the ```.env``` file, please insert the OpenAI API key, Google API key and your Google Custom Search Engine ID as below:
+```
+OPENAI_API_KEY = Your-OpenAI-API-Key
+GOOGLE_API_KEY = Your-Google-API-Key
+CSE_ID = Your-Google-CSE-ID
+```
+5. Make the ```start.sh``` file executable:
+```chmod +x filename.sh```
+6. Run the ```start.sh```:
+```./start.sh```
