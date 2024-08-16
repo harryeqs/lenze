@@ -59,7 +59,7 @@ class WebSearchAgent(BaseAgent):
         return self.response
     
     async def answer_stream(self, most_relevant_sources: list[dict]) -> AsyncGenerator[str, None]:
-        values = {'sources': most_relevant_sources, 'query': self.query}
+        values = {'sources': most_relevant_sources, 'query': self.refined_query}
         message = complete_template(ANSWER_PROMPT, values)
 
         self.response = ""
