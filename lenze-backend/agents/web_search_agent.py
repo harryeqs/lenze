@@ -46,9 +46,8 @@ class WebSearchAgent(BaseAgent):
         self.source_manager.store_data(sources)
 
     def find_sources(self):
-
-        query_embedding = self.source_manager.generate_embedding(self.refined_query)
-        most_relevant_sources = self.source_manager.find_most_relevant_sources(np.frombuffer(query_embedding, dtype=np.float32))
+        
+        most_relevant_sources = self.source_manager.find_most_relevant_sources(self.refined_query)
         return most_relevant_sources
     
     def answer(self, most_relevant_sources: list[dict]):

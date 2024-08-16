@@ -44,11 +44,12 @@ const WebSearchStream = () => {
         }
     }, [sessionId]);
 
-    const handleSearch = useCallback((query) => {
+    const handleSearch = useCallback(async (query) => {
         if (!sessionId) {
             alert('No session ID available.');
             return;
         };
+    
         setCurrentQuery(query); // Update the current query state
         setIsSeaching(true);
         setHasStartedStreaming(false);
@@ -58,9 +59,12 @@ const WebSearchStream = () => {
         setTimeTaken('');
         setSources([]);
         abortControllerRef.current = new AbortController();
-
+    
+        // Fetch previous conversations before starting the search
+        await fetchPreviousConversations();
+    
         console.log(`Connecting to ${API_URL}/web-search-stream/${sessionId}?query=${encodeURIComponent(query)}`);
-
+    
         fetchEventSource(`${API_URL}/web-search-stream/${sessionId}?query=${encodeURIComponent(query)}`, {
             method: "POST",
             headers: { Accept: "text/event-stream" },
@@ -104,7 +108,7 @@ const WebSearchStream = () => {
                 setIsStreaming(false);
             },
         });
-    }, [sessionId]);
+    }, [sessionId, fetchPreviousConversations]);
 
     useEffect(() => {
         if (query) {

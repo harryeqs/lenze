@@ -31,69 +31,85 @@ class Sources:
                 embedding BLOB
             )
         ''')
+        # Create an index on the embedding column for faster queries
+        cursor.execute(f'CREATE INDEX IF NOT EXISTS idx_embedding ON {self.table_name}(embedding);')
         conn.commit()
         conn.close()
 
-    def generate_embedding(self, text):
+    def generate_embeddings(self, texts):
         """
-        Generate an embedding using the OpenAI API for the given text.
+        Generate embeddings using the OpenAI API for the given texts in batch.
         """
         response = openai.embeddings.create(
-            input=text,
+            input=texts,
             model="text-embedding-3-small"
         )
-        embedding = response.data[0].embedding
-        return np.array(embedding, dtype=np.float32).tobytes()
+        embeddings = [np.array(e, dtype=np.float32).tobytes() for e in response.data[0].embedding]
+        return embeddings
 
     def store_data(self, data):
         """
-        Store data locally into the SQLite database.
+        Store data locally into the SQLite database using batch insertions.
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
         start_time = time.time()
+        batch_data = []
+        texts_for_embedding = []
+
         for entry in data:
             if entry['text'] and entry['text'] not in ['Error fetching content.', 'Enable JavaScript and cookies to continue', 'Please enable JS and disable any ad blocker', 'Access Denied']:
-                embedding = self.generate_embedding(entry['text'])
-                cursor.execute(f'''
-                    INSERT INTO {self.table_name} (title, link, text, embedding) VALUES (?, ?, ?, ?)
-                ''', (entry['title'], entry['link'], entry['text'], embedding))
+                texts_for_embedding.append(entry['text'])
+                batch_data.append((entry['title'], entry['link'], entry['text']))
+
+        embeddings = self.generate_embeddings(texts_for_embedding)
+
+        batch_insert_data = [(batch_data[i][0], batch_data[i][1], batch_data[i][2], embeddings[i]) for i in range(len(batch_data))]
+
+        cursor.executemany(f'''
+            INSERT INTO {self.table_name} (title, link, text, embedding) VALUES (?, ?, ?, ?)
+        ''', batch_insert_data)
 
         end_time = time.time()
-        
+
         conn.commit()
         conn.close()
 
         print(f'Storing took {end_time-start_time:.4f} seconds')
 
-    def read_data(self):
+    def read_data_streaming(self):
         """
-        Read locally stored data from the SQLite database.
+        Read locally stored data from the SQLite database using streaming.
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute(f'SELECT title, link, text, embedding FROM {self.table_name}')
-        rows = cursor.fetchall()
+        while True:
+            row = cursor.fetchone()
+            if row is None:
+                break
+            yield {'title': row[0], 'link': row[1], 'text': row[2], 'embedding': np.frombuffer(row[3], dtype=np.float32)}
         conn.close()
 
-        data = [{'title': row[0], 'link': row[1], 'text': row[2], 'embedding': np.frombuffer(row[3], dtype=np.float32)} for row in rows]
-        return data
-
-    def find_most_relevant_sources(self, query_embedding, top_n=5, similarity_threshold=0.5, scope=20):
+    def find_most_relevant_sources(self, query, top_n=5, similarity_threshold=0.5, scope=20):
         """
-        Find the most relevant sources based on cosine similarity.
+        Find the most relevant sources based on cosine similarity using vectorized operations.
         """
-        sources = self.read_data()[-scope:]
+        sources = list(self.read_data_streaming())[-scope:]
 
         if not sources:
             print("No sources found in the database.")
             return []  # Return an empty list or handle this case as needed
-        
-        source_embeddings = [source['embedding'] for source in sources]
+
+        query_embedding = np.frombuffer(self.generate_embeddings([query])[0], dtype=np.float32)
+        source_embeddings = np.stack([source['embedding'] for source in sources])
         similarities = cosine_similarity([query_embedding], source_embeddings).flatten()
-        print(similarities)
-        filtered_indices = [i for i, similarity in enumerate(similarities) if similarity > similarity_threshold]
-        filtered_indices = sorted(filtered_indices, key=lambda i: similarities[i], reverse=True)
-        most_relevant_indices = filtered_indices[:top_n]
+        
+        filtered_indices = np.where(similarities > similarity_threshold)[0]
+        print(filtered_indices)
+        if filtered_indices.size == 0:
+            return []
+
+        most_relevant_indices = filtered_indices[np.argsort(similarities[filtered_indices])][-top_n:]
         return [{'title': sources[i]['title'], 'link': sources[i]['link'], 'text': sources[i]['text']} for i in most_relevant_indices]
