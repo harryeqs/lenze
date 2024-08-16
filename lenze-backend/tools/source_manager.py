@@ -1,15 +1,12 @@
 import sqlite3
 import numpy as np
-from transformers import RobertaTokenizer, RobertaModel
-import torch
-from sklearn.metrics.pairwise import cosine_similarity
+import openai
 import os
+from sklearn.metrics.pairwise import cosine_similarity
+import time
 
-# Initialize BERT model and tokenizer
-tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
-model = RobertaModel.from_pretrained('roberta-base')
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model.to(device)
+# Set your OpenAI API key
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 class Sources:
     def __init__(self, session_id):
@@ -39,13 +36,14 @@ class Sources:
 
     def generate_embedding(self, text):
         """
-        Generate a BERT embedding for the given text.
+        Generate an embedding using the OpenAI API for the given text.
         """
-        inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=128).to(device)
-        with torch.no_grad():
-            outputs = model(**inputs)
-        embedding = outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
-        return embedding.tobytes()
+        response = openai.embeddings.create(
+            input=text,
+            model="text-embedding-3-small"
+        )
+        embedding = response.data[0].embedding
+        return np.array(embedding, dtype=np.float32).tobytes()
 
     def store_data(self, data):
         """
@@ -54,15 +52,20 @@ class Sources:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
+        start_time = time.time()
         for entry in data:
             if entry['text'] and entry['text'] not in ['Error fetching content.', 'Enable JavaScript and cookies to continue', 'Please enable JS and disable any ad blocker', 'Access Denied']:
                 embedding = self.generate_embedding(entry['text'])
                 cursor.execute(f'''
                     INSERT INTO {self.table_name} (title, link, text, embedding) VALUES (?, ?, ?, ?)
                 ''', (entry['title'], entry['link'], entry['text'], embedding))
+
+        end_time = time.time()
         
         conn.commit()
         conn.close()
+
+        print(f'Storing took {end_time-start_time:.4f} seconds')
 
     def read_data(self):
         """
@@ -77,7 +80,7 @@ class Sources:
         data = [{'title': row[0], 'link': row[1], 'text': row[2], 'embedding': np.frombuffer(row[3], dtype=np.float32)} for row in rows]
         return data
 
-    def find_most_relevant_sources(self, query_embedding, top_n=5, similarity_threshold=0.7, scope=20):
+    def find_most_relevant_sources(self, query_embedding, top_n=5, similarity_threshold=0.5, scope=20):
         """
         Find the most relevant sources based on cosine similarity.
         """
@@ -91,7 +94,6 @@ class Sources:
         similarities = cosine_similarity([query_embedding], source_embeddings).flatten()
         print(similarities)
         filtered_indices = [i for i, similarity in enumerate(similarities) if similarity > similarity_threshold]
-        print(filtered_indices)
         filtered_indices = sorted(filtered_indices, key=lambda i: similarities[i], reverse=True)
         most_relevant_indices = filtered_indices[:top_n]
         return [{'title': sources[i]['title'], 'link': sources[i]['link'], 'text': sources[i]['text']} for i in most_relevant_indices]
