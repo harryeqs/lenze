@@ -92,12 +92,13 @@ async def web_search_stream(session_id: int, query: Annotated[str, Query(min_len
     agent.query = query
     start_time = time.time()
 
-    need_search = agent.analyze()
-    if need_search:
-        search_start = time.time()
-        await agent.search()
-        search_end = time.time()
-        print(f'\n**Search took {search_end-search_start:.4f} seconds**\n')
+    agent.analyze()
+
+    search_start = time.time()
+    await agent.search()
+    search_end = time.time()
+    
+    print(f'\n**Search took {search_end-search_start:.4f} seconds**\n')
 
     
     most_relevant_sources = agent.find_sources()

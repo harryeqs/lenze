@@ -25,12 +25,7 @@ class WebSearchAgent(BaseAgent):
         current_date = date.today()
         values = {'query': self.query, 'current_date': current_date, 'search_history': self.search_history}
         message = complete_template(ANALYZE_PROMPT, values)
-        analysis = self._get_response(message)
-        analysis = json.loads(analysis)
-        need_search, refined_query = analysis["need_search"], analysis["refined_query"]
-        self.refined_query = refined_query
-        print(f'Need search: {need_search}')
-        return need_search
+        self.refined_query = self._get_response(message)
   
     async def search(self, num: int = 10):
 
