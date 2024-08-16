@@ -4,7 +4,7 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import SearchForm from './SearchForm';
 import ResponseDisplay from './ResponseDisplay';
 import RelatedQueries from './RelatedQueries';
-import SourcesList from './SourcesList'
+import SourcesList from './SourcesList';
 import './WebSearchStream.css';
 
 const API_URL = 'http://localhost:8000';
@@ -18,15 +18,16 @@ const WebSearchStream = () => {
     const query = useQuery().get('query');
     const navigate = useNavigate();
     const responseRef = useRef('');
+    const hasSearchedRef = useRef(false); // Ref to track if the search has already been triggered
     const [response, setResponse] = useState('');
-    const [previousConversations, setPreviousConversations] = useState([]); // State to store previous conversations
+    const [previousConversations, setPreviousConversations] = useState([]);
     const [isStreaming, setIsStreaming] = useState(false);
     const [isSearching, setIsSeaching] = useState(false);
     const [hasStartedStreaming, setHasStartedStreaming] = useState(false);
     const [relatedQueries, setRelatedQueries] = useState([]);
     const [timeTaken, setTimeTaken] = useState('');
     const [sources, setSources] = useState([]);
-    const [currentQuery, setCurrentQuery] = useState(query || ''); // State to store the current query
+    const [currentQuery, setCurrentQuery] = useState(query || '');
     const abortControllerRef = useRef(null);
 
     const fetchPreviousConversations = useCallback(async () => {
@@ -48,9 +49,9 @@ const WebSearchStream = () => {
         if (!sessionId) {
             alert('No session ID available.');
             return;
-        };
-    
-        setCurrentQuery(query); // Update the current query state
+        }
+
+        setCurrentQuery(query);
         setIsSeaching(true);
         setHasStartedStreaming(false);
         responseRef.current = '';
@@ -59,12 +60,11 @@ const WebSearchStream = () => {
         setTimeTaken('');
         setSources([]);
         abortControllerRef.current = new AbortController();
-    
-        // Fetch previous conversations before starting the search
+
         await fetchPreviousConversations();
-    
+
         console.log(`Connecting to ${API_URL}/web-search-stream/${sessionId}?query=${encodeURIComponent(query)}`);
-    
+
         fetchEventSource(`${API_URL}/web-search-stream/${sessionId}?query=${encodeURIComponent(query)}`, {
             method: "POST",
             headers: { Accept: "text/event-stream" },
@@ -85,12 +85,12 @@ const WebSearchStream = () => {
                     setRelatedQueries(finalData.related);
                     setTimeTaken(finalData.time_taken);
                     setIsStreaming(false);
-                    console.log("Related queries and time taken received")
+                    console.log("Related queries and time taken received");
                 } else if (event.event === 'source') {
                     const sourcesData = JSON.parse(event.data);
                     setSources(sourcesData);
                     console.log("Sources received");
-                    setIsSeaching(false)
+                    setIsSeaching(false);
                 } else if (event.data) {
                     responseRef.current += event.data;
                     setResponse(responseRef.current);
@@ -111,9 +111,9 @@ const WebSearchStream = () => {
     }, [sessionId, fetchPreviousConversations]);
 
     useEffect(() => {
-        if (query) {
+        if (query && !hasSearchedRef.current) {
             handleSearch(query);
-            
+            hasSearchedRef.current = true; // Mark the search as triggered
         }
 
         fetchPreviousConversations();
